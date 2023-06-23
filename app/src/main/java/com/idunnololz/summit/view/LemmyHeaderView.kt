@@ -3,12 +3,14 @@ package com.idunnololz.summit.view
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.idunnololz.summit.R
+import com.idunnololz.summit.databinding.LemmyHeaderViewBinding
 
-class RedditHeaderView : LinearLayout {
+class LemmyHeaderView : LinearLayout {
 
     companion object {
         const val STATIC_VIEW_COUNT = 3
@@ -30,11 +32,11 @@ class RedditHeaderView : LinearLayout {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
 
-        View.inflate(context, R.layout.reddit_header_view, this)
+        val binding = LemmyHeaderViewBinding.inflate(LayoutInflater.from(context), this)
 
-        textView1 = findViewById(R.id.textView1)
-        textView2 = findViewById(R.id.textView2)
-        flairView = findViewById(R.id.flairView)
+        textView1 = binding.textView1
+        textView2 = binding.textView2
+        flairView = binding.flairView
 
         flairView.visibility = View.GONE
     }
