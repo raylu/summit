@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings
+package com.idunnololz.summit.settings.view_type
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -33,6 +33,11 @@ import com.idunnololz.summit.lemmy.community.CommunityLayout
 import com.idunnololz.summit.lemmy.post_view.ListingItemViewHolder
 import com.idunnololz.summit.lemmy.post_view.PostViewBuilder
 import com.idunnololz.summit.preferences.Preferences
+import com.idunnololz.summit.settings.OnOffSettingItem
+import com.idunnololz.summit.settings.SettingsFragment
+import com.idunnololz.summit.settings.SliderSettingItem
+import com.idunnololz.summit.settings.TextOnlySettingItem
+import com.idunnololz.summit.settings.ui.bindTo
 import com.idunnololz.summit.util.BaseFragment
 import com.idunnololz.summit.util.Utils.ANIMATION_DURATION_MS
 import dagger.hilt.android.AndroidEntryPoint
@@ -151,7 +156,9 @@ AlertDialogFragment.AlertDialogFragmentListener {
         val context = requireContext()
 
         requireMainActivity().apply {
-            insetViewAutomaticallyByPadding(viewLifecycleOwner, binding.root)
+            setupForFragment<SettingsFragment>()
+            insetViewExceptTopAutomaticallyByPadding(viewLifecycleOwner, binding.scrollView)
+            insetViewExceptBottomAutomaticallyByMargins(viewLifecycleOwner, binding.toolbar)
 
             setSupportActionBar(binding.toolbar)
 
