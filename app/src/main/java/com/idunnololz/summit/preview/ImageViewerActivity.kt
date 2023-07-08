@@ -7,15 +7,25 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.transition.Fade
+import android.transition.Transition
+import android.transition.TransitionListenerAdapter
 import android.util.Log
 import android.view.*
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import androidx.navigation.navArgs
 import coil.drawable.MovieDrawable
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -30,6 +40,7 @@ import com.idunnololz.summit.reddit.LemmyUtils
 import com.idunnololz.summit.scrape.ImgurWebsiteAdapter
 import com.idunnololz.summit.scrape.WebsiteAdapterLoader
 import com.idunnololz.summit.util.*
+import com.idunnololz.summit.util.ext.showAboveCutout
 import com.idunnololz.summit.view.GalleryImageView
 import dagger.hilt.android.AndroidEntryPoint
 import org.apache.commons.io.FilenameUtils
@@ -37,17 +48,19 @@ import java.io.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
+class ImageViewerActivity : BaseActivity() {
 
     companion object {
 
         private const val PERMISSION_REQUEST_EXTERNAL_WRITE = 1
 
         @Suppress("unused")
-        private val TAG = ImageViewerFragment::class.java.canonicalName
+        private val TAG = ImageViewerActivity::class.java.canonicalName
+
+        private const val EXIT_OFFSET_DP = 60f
     }
 
-    private val args: ImageViewerFragmentArgs by navArgs()
+    private val args: ImageViewerActivityArgs by navArgs()
 
     private val viewModel: ImageViewerViewModel by viewModels()
 
@@ -59,6 +72,8 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
     private var mimeType: String? = null
 
     private var websiteAdapterLoader: WebsiteAdapterLoader? = null
+
+    private lateinit var binding: FragmentImageViewerBinding
 
     @Inject
     lateinit var offlineManager: OfflineManager
@@ -77,69 +92,112 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
                 ).setAction(R.string.help) {
                     val i = Intent(Intent.ACTION_VIEW)
                     i.data = Uri.parse(LinkUtils.APP_PERMISSIONS_HELP_ARTICLE)
-                    Utils.safeLaunchExternalIntent(requireContext(), i)
+                    Utils.safeLaunchExternalIntent(this, i)
                 }.show()
             }
         }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        super.onCreateView(inflater, container, savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        postponeEnterTransition()
+        super.onCreate(savedInstanceState)
+        binding = FragmentImageViewerBinding.inflate(LayoutInflater.from(this))
 
-        (activity as MainActivity).apply {
-            setupForFragment<ImageViewerFragment>()
+        setContentView(binding.root)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        showAboveCutout()
+
+        onViewCreated(binding.root, savedInstanceState)
+
+        setupActionBar("", true)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { _, insets ->
+            val insetsCompat = WindowInsetsCompat(insets)
+            val insetsSystemBars = insetsCompat.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            binding.toolbar.layoutParams = binding.toolbar.layoutParams.apply {
+                (this as MarginLayoutParams).topMargin = insetsSystemBars.top
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && isLightTheme()) {
+                binding.statusBarBg.layoutParams = binding.statusBarBg.layoutParams.apply {
+                    height = insetsSystemBars.top
+                }
+                binding.statusBarBg.visibility = View.VISIBLE
+            } else {
+                binding.statusBarBg.visibility = View.GONE
+            }
+
+//            binding.imageView.updateLayoutParams<MarginLayoutParams> {
+//                topMargin = insetsSystemBars.top
+//            }
+//            binding.dummyImageView.updateLayoutParams<MarginLayoutParams> {
+//                topMargin = insetsSystemBars.top
+//            }
+
+
+            insets
         }
+//        if (!LemmyUtils.isUrlAGif(args.url)) {
+//            sharedElementEnterTransition = SharedElementTransition()
+//            sharedElementReturnTransition = SharedElementTransition()
+//        }
 
-        if (!LemmyUtils.isUrlAGif(args.url)) {
-            sharedElementEnterTransition = SharedElementTransition()
-            sharedElementReturnTransition = SharedElementTransition()
+
+        window.enterTransition = Fade(Fade.IN).apply {
+            duration = 250
         }
+        window.exitTransition = Fade(Fade.OUT).apply {
+            duration = 250
+        }
+        window.returnTransition = Fade(Fade.OUT).apply {
+            duration = 250
+        }
+        window.sharedElementEnterTransition = SharedElementTransition()
+        window.sharedElementReturnTransition = SharedElementTransition()
+//        window.sharedElementsUseOverlay = false
 
-        setBinding(FragmentImageViewerBinding.inflate(inflater, container, false))
+        binding.dummyImageView.visibility = View.VISIBLE
+        binding.imageView.visibility = View.INVISIBLE
+        window.sharedElementEnterTransition.addListener(object : Transition.TransitionListener  {
+            override fun onTransitionStart(p0: Transition?) {
+            }
 
-        return binding.root
+            override fun onTransitionEnd(p0: Transition?) {
+                binding.dummyImageView.post {
+                    binding.dummyImageView.transitionName = null
+                    binding.imageView.transitionName = args.transitionName
+
+                    binding.dummyImageView.visibility = View.GONE
+                    binding.imageView.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onTransitionCancel(p0: Transition?) {
+            }
+
+            override fun onTransitionPause(p0: Transition?) {
+            }
+
+            override fun onTransitionResume(p0: Transition?) {
+            }
+        })
+
+        binding.toolbar.setNavigationOnClickListener {
+            supportFinishAfterTransition()
+        }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        postponeEnterTransition()
+    fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val context = this
 
-        super.onViewCreated(view, savedInstanceState)
-
-        val context = requireContext()
-
-        (activity as? MainActivity)?.setupActionBar(R.string.image_viewer, true)
-
-        requireMainActivity().let {
-            val toolbarHeight = it.getToolbarHeight()
-            it.windowInsets.observe(viewLifecycleOwner) {
-                binding.rootView.getConstraintSet(R.id.normal)
-                    .setMargin(
-                        R.id.dismiss_warning,
-                        ConstraintSet.TOP,
-                        it.top + toolbarHeight
-                    )
-                binding.rootView.getConstraintSet(R.id.exiting)
-                    .setMargin(
-                        R.id.dismiss_warning,
-                        ConstraintSet.TOP,
-                        it.top + toolbarHeight
-                    )
-            }
-        }
+        binding.dummyImageView.transitionName = args.transitionName
 
         binding.loadingView.showProgressBar()
         binding.loadingView.setOnRefreshClickListener {
             loadImage(args.url)
         }
 
-        val parent = activity as MainActivity
-
-        decorView = parent.window.decorView
-
-        ViewCompat.setTransitionName(binding.imageView, "image_view")
+        decorView = window.decorView
 
         loadImage(args.url)
 
@@ -147,7 +205,7 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
             startPostponedEnterTransition()
         }
 
-        viewModel.downloadResult.observe(viewLifecycleOwner) {
+        viewModel.downloadResult.observe(this) {
             when (it) {
                 is StatefulData.NotStarted -> {}
                 is StatefulData.Error -> {}
@@ -161,17 +219,13 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
 
                                 val snackbarMsg = getString(R.string.image_saved_format, downloadResult.uri)
                                 Snackbar.make(
-                                    requireMainActivity().getSnackbarContainer(),
+                                    getSnackbarContainer(),
                                     snackbarMsg,
                                     Snackbar.LENGTH_LONG
                                 ).setAction(R.string.view) {
-                                    if (!isAdded) {
-                                        return@setAction
-                                    }
-
                                     Utils.safeLaunchExternalIntentWithErrorDialog(
                                         context,
-                                        parentFragmentManager,
+                                        supportFragmentManager,
                                         Intent(Intent.ACTION_VIEW).apply {
                                             flags =
                                                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -183,7 +237,7 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
                         }
                         .onFailure {
                             FirebaseCrashlytics.getInstance().recordException(it)
-                            Snackbar.make(binding.rootView, R.string.error_downloading_image, Snackbar.LENGTH_LONG)
+                            Snackbar.make(getSnackbarContainer(), R.string.error_downloading_image, Snackbar.LENGTH_LONG)
                                 .show()
                         }
                 }
@@ -221,15 +275,9 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
 
         })
     }
-
-    override fun onDestroyView() {
-        offlineManager.cancelFetch(binding.rootView)
-
-        super.onDestroyView()
-    }
-
     override fun onDestroy() {
-        (requireActivity() as MainActivity).showSystemUI(false)
+        offlineManager.cancelFetch(binding.root)
+        showSystemUI()
         websiteAdapterLoader?.destroy()
         super.onDestroy()
     }
@@ -239,6 +287,7 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             PERMISSION_REQUEST_EXTERNAL_WRITE -> {
                 // If request is cancelled, the result arrays are empty.
@@ -260,12 +309,10 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
                 add(ImgurWebsiteAdapter(url), url, Utils.hashSha256(url))
                 setOnEachAdapterLoadedListener a@{
                     if (it is ImgurWebsiteAdapter) {
-                        val rootView = binding.rootView ?: return@a
+                        val rootView = binding.root ?: return@a
 
                         if (it.isSuccess()) {
                             rootView.post {
-                                if (!isAdded) return@post
-
                                 if (it.get().wasUrlRawGif) {
                                     loadImage(url, forceLoadAsImage = true)
                                 } else {
@@ -274,8 +321,6 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
                             }
                         } else {
                             rootView.post {
-                                if (!isAdded) return@post
-
                                 binding.loadingView.showDefaultErrorMessageFor(it.error)
 
                                 showUi()
@@ -298,49 +343,46 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
 
         fileName = FilenameUtils.getName(url) ?: "unknown"
 
-        (activity as? MainActivity)?.setupActionBar(title, true)
+        setupActionBar(title, true)
 
         binding.imageView.callback = object : GalleryImageView.Callback {
             override fun togggleUi() {
-                this@ImageViewerFragment.togggleUi()
+                this@ImageViewerActivity.togggleUi()
             }
 
             override fun showUi() {
-                this@ImageViewerFragment.showUi()
+                this@ImageViewerActivity.showUi()
             }
 
             override fun hideUi() {
-                this@ImageViewerFragment.hideUi()
+                this@ImageViewerActivity.hideUi()
             }
 
             var currentState = 0
             override fun overScroll(offX: Float, offY: Float) {
-                if (offY > Utils.convertDpToPixel(80f)) {
+                if (offY > Utils.convertDpToPixel(EXIT_OFFSET_DP) ||
+                    offY < -Utils.convertDpToPixel(EXIT_OFFSET_DP) ||
+                    offX > Utils.convertDpToPixel(EXIT_OFFSET_DP) ||
+                    offX < -Utils.convertDpToPixel(EXIT_OFFSET_DP)) {
                     if (currentState != R.id.exiting) {
                         currentState = R.id.exiting
-                        binding.rootView.transitionToState(R.id.exiting)
                     }
                 } else {
                     if (currentState != R.id.normal) {
                         currentState = R.id.normal
-                        binding.rootView.transitionToState(R.id.normal)
                     }
                 }
             }
 
+
             override fun overScrollEnd(): Boolean {
                 if (currentState == R.id.exiting) {
-                    requireActivity().onBackPressed()
+                    supportFinishAfterTransition()
                     return true
                 }
 
                 return false
             }
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.imageView) { v, insets ->
-            val params = v.layoutParams as ViewGroup.MarginLayoutParams
-            params.topMargin = insets.systemWindowInsetTop
-            insets.consumeSystemWindowInsets()
         }
 
         loadImageFromUrl(url)
@@ -356,21 +398,43 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
 
     private fun showUi() {
         showingUi = true
-        (activity as? MainActivity)?.showActionBar()
-        (activity as? MainActivity)?.showSystemUI(true)
+        showActionBar()
+        showSystemUI()
     }
 
     private fun hideUi() {
         showingUi = false
-        (activity as? MainActivity)?.hideActionBar(true)
-        (activity as? MainActivity)?.hideSystemUI()
+        hideActionBar(true)
+        hideSystemUI()
+    }
+
+
+    fun hideSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowInsetsControllerCompat(
+            window,
+            requireNotNull(window.decorView),
+        ).let {
+            it.isAppearanceLightStatusBars
+            it.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            it.hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    fun showSystemUI() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(
+            window,
+            requireNotNull(window.decorView),
+        ).show(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun downloadImage() {
-        val context = context ?: return
-        offlineManager.fetchImageWithError(binding.rootView, url, {
+        offlineManager.fetchImageWithError(binding.root, url, {
             viewModel.downloadFile(
-                context,
+                this,
                 fileName,
                 url,
                 it,
@@ -378,7 +442,7 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
             )
         }, {
             Snackbar.make(
-                binding.rootView,
+                getSnackbarContainer(),
                 R.string.error_downloading_image,
                 Snackbar.LENGTH_LONG
             ).show()
@@ -388,8 +452,8 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
     private fun loadImageFromUrl(url: String) {
         Log.d(TAG, "loadImageFromUrl: $url")
 
-        offlineManager.fetchImageWithError(binding.rootView, url, {
-            if (!isBindingAvailable()) return@fetchImageWithError
+        offlineManager.fetchImageWithError(binding.root, url, {
+//            if (!isBindingAvailable()) return@fetchImageWithError
 
             val tempSize = Size()
             offlineManager.calculateImageMaxSizeIfNeeded(it)
@@ -413,6 +477,7 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
                         binding.loadingView.hideAll()
 
                         binding.imageView.setImageDrawable(result)
+                        binding.dummyImageView.setImageDrawable(result)
 
                         if (result is MovieDrawable) {
                             result.start()
@@ -425,4 +490,43 @@ class ImageViewerFragment : BaseFragment<FragmentImageViewerBinding>() {
             binding.loadingView.showDefaultErrorMessageFor(it)
         })
     }
+
+    fun setupActionBar(
+        title: CharSequence?,
+        showUp: Boolean,
+        usingTabsHint: Boolean = false,
+        animateActionBarIn: Boolean = true,
+        scrollFlags: Int? = null,
+        resetFabState: Boolean = true,
+    ) {
+        setSupportActionBar(binding.toolbar)
+
+        val actionBar = supportActionBar
+        actionBar?.setDisplayShowHomeEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
+
+        binding.toolbar.title = title
+    }
+
+    fun showActionBar() {
+        hideActionBar(false)
+
+        val supportActionBar = supportActionBar ?: return
+        if (supportActionBar.isShowing) return
+        supportActionBar.show()
+
+        binding.statusBarBg.animate().alpha(1f)
+    }
+
+    fun hideActionBar(hideToolbar: Boolean = true, hideStatusBar: Boolean = false) {
+        if (hideToolbar) {
+            val supportActionBar = supportActionBar ?: return
+            if (!supportActionBar.isShowing) {
+                return
+            }
+            supportActionBar.hide()
+        }
+        binding.statusBarBg.animate().alpha(0f)
+    }
+    fun getSnackbarContainer(): View = binding.contentView
 }
