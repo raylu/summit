@@ -1,30 +1,25 @@
-package com.idunnololz.summit.settings.gestures
+package com.idunnololz.summit.settings.content
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.idunnololz.summit.R
-import com.idunnololz.summit.databinding.FragmentCacheBinding
-import com.idunnololz.summit.databinding.FragmentSettingGesturesBinding
-import com.idunnololz.summit.lemmy.postAndCommentView.PostAndCommentViewBuilder
+import com.idunnololz.summit.databinding.FragmentSettingsContentBinding
 import com.idunnololz.summit.preferences.Preferences
 import com.idunnololz.summit.settings.OnOffSettingItem
 import com.idunnololz.summit.settings.SettingsFragment
 import com.idunnololz.summit.settings.cache.SettingCacheFragment
 import com.idunnololz.summit.settings.ui.bindTo
 import com.idunnololz.summit.util.BaseFragment
-import com.idunnololz.summit.util.PreferenceUtil.preferences
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SettingGesturesFragment : BaseFragment<FragmentSettingGesturesBinding>() {
+class SettingsContentFragment : BaseFragment<FragmentSettingsContentBinding>() {
 
     @Inject
     lateinit var preferences: Preferences
-    @Inject
-    lateinit var postAndCommentViewBuilder: PostAndCommentViewBuilder
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,7 +32,7 @@ class SettingGesturesFragment : BaseFragment<FragmentSettingGesturesBinding>() {
             setupForFragment<SettingCacheFragment>()
         }
 
-        setBinding(FragmentSettingGesturesBinding.inflate(inflater, container, false))
+        setBinding(FragmentSettingsContentBinding.inflate(inflater, container, false))
 
         return binding.root
     }
@@ -56,7 +51,7 @@ class SettingGesturesFragment : BaseFragment<FragmentSettingGesturesBinding>() {
 
             supportActionBar?.setDisplayShowHomeEnabled(true)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            supportActionBar?.title = context.getString(R.string.gestures)
+            supportActionBar?.title = context.getString(R.string.content)
         }
 
         updateRendering()
@@ -64,16 +59,13 @@ class SettingGesturesFragment : BaseFragment<FragmentSettingGesturesBinding>() {
 
     private fun updateRendering() {
         OnOffSettingItem(
-            getString(R.string.use_gesture_actions),
-            getString(R.string.use_gesture_actions_desc),
+            getString(R.string.infinity),
+            getString(R.string.no_your_limits),
         ).bindTo(
-            binding.gestureActions,
-            { preferences.useGestureActions },
+            binding.infinity,
+            { preferences.infinity },
             {
-                preferences.useGestureActions = it
-                preferences.hideCommentActions = preferences.useGestureActions
-
-                postAndCommentViewBuilder.onPreferencesChanged()
+                preferences.infinity = it
 
                 updateRendering()
             }

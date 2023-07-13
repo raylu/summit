@@ -96,7 +96,7 @@
         app:layout_constraintStart_toEndOf="@+id/threadLinesContainer"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <com.idunnololz.summit.view.FixedTextView
+    <com.idunnololz.summit.view.LinkifyTextView
         android:id="@+id/text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -107,87 +107,21 @@
         android:layout_marginEnd="@dimen/padding_half"
         app:layout_constraintTop_toBottomOf="@+id/media_container"
         app:layout_constraintStart_toEndOf="@+id/threadLinesContainer"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:id="@+id/actions_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="text"
-        app:barrierDirection="bottom" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text"
+        app:layout_constraintStart_toStartOf="@+id/threadLinesContainer"/>
 
-    <ImageButton
-        android:id="@+id/moreButton"
+    <Space
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/baseline_more_horiz_black_18"
-        app:layout_constraintTop_toBottomOf="@+id/barrier"
-        app:layout_constraintEnd_toStartOf="@+id/controlsDivider2" />
-
-    <com.google.android.material.divider.MaterialDivider
-        android:id="@+id/controlsDivider2"
-        android:layout_height="0dp"
-        android:layout_width="1dp"
-        android:layout_marginTop="@dimen/padding_half"
-        android:layout_marginBottom="@dimen/padding_half"
-        app:layout_constraintEnd_toStartOf="@+id/commentButton"
-        app:layout_constraintTop_toTopOf="@+id/commentButton"
-        app:layout_constraintBottom_toBottomOf="@+id/commentButton" />
-
-    <ImageButton
-        android:id="@+id/commentButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/baseline_add_comment_24"
-        app:layout_constraintTop_toBottomOf="@+id/barrier"
-        app:layout_constraintEnd_toStartOf="@+id/controlsDivider" />
-
-    <com.google.android.material.divider.MaterialDivider
-        android:id="@+id/controlsDivider"
-        android:layout_height="0dp"
-        android:layout_width="1dp"
-        android:layout_marginTop="@dimen/padding_half"
-        android:layout_marginBottom="@dimen/padding_half"
-        app:layout_constraintEnd_toStartOf="@+id/upvoteButton"
-        app:layout_constraintTop_toTopOf="@+id/commentButton"
-        app:layout_constraintBottom_toBottomOf="@+id/commentButton" />
-
-    <ImageButton
-        android:id="@+id/upvoteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/baseline_arrow_upward_24"
-        android:padding="@dimen/padding_half"
-        android:background="?selectableItemBackgroundBorderless"
-        app:tint="?colorControlNormal"
-        app:layout_constraintTop_toTopOf="@+id/commentButton"
-        app:layout_constraintBottom_toBottomOf="@+id/commentButton"
-        app:layout_constraintEnd_toStartOf="@+id/upvoteCount" />
-
-    <TextView
-        android:id="@+id/upvoteCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@+id/commentButton"
-        app:layout_constraintBottom_toBottomOf="@+id/commentButton"
-        app:layout_constraintEnd_toStartOf="@+id/downvoteButton" />
-
-    <ImageButton
-        android:id="@+id/downvoteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/baseline_arrow_downward_24"
-        android:paddingStart="@dimen/padding_half"
-        android:paddingEnd="@dimen/reddit_content_horizontal_padding_for_downvote"
-        android:background="?selectableItemBackgroundBorderless"
-        app:tint="?colorControlNormal"
-        app:layout_constraintTop_toTopOf="@+id/commentButton"
-        app:layout_constraintBottom_toBottomOf="@+id/commentButton"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_height="@dimen/padding"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text"/>
 
     <View
         android:id="@+id/overlay"
