@@ -1,32 +1,47 @@
-package com.idunnololz.summit.lemmy.multicommunity
+package com.idunnololz.summit.lemmy.personPicker
 
 import android.content.Context
+import android.text.Spannable
+import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.core.text.buildSpannedString
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.idunnololz.summit.R
 import com.idunnololz.summit.api.dto.CommunityView
+import com.idunnololz.summit.api.dto.PersonView
 import com.idunnololz.summit.api.utils.instance
 import com.idunnololz.summit.databinding.CommunitySelectorGroupItemBinding
 import com.idunnololz.summit.databinding.CommunitySelectorNoResultsItemBinding
 import com.idunnololz.summit.databinding.CommunitySelectorSearchResultCommunityItemBinding
 import com.idunnololz.summit.databinding.CommunitySelectorSelectedCommunityItemBinding
+import com.idunnololz.summit.databinding.PersonSelectorSearchResultPersonItemBinding
+import com.idunnololz.summit.databinding.PersonSelectorSelectedPersonItemBinding
 import com.idunnololz.summit.lemmy.CommunityRef
 import com.idunnololz.summit.lemmy.LemmyUtils
-import com.idunnololz.summit.lemmy.multicommunity.MultiCommunityDataSource.Companion.MULTI_COMMUNITY_DATA_SOURCE_LIMIT
+import com.idunnololz.summit.lemmy.PersonRef
+import com.idunnololz.summit.lemmy.multicommunity.MultiCommunityDataSource
 import com.idunnololz.summit.lemmy.toCommunityRef
+import com.idunnololz.summit.lemmy.toPersonRef
 import com.idunnololz.summit.offline.OfflineManager
+import com.idunnololz.summit.util.LinkUtils
+import com.idunnololz.summit.util.ext.appendLink
+import com.idunnololz.summit.util.ext.getColorFromAttribute
+import com.idunnololz.summit.util.ext.getDrawableCompat
+import com.idunnololz.summit.util.ext.tint
 import com.idunnololz.summit.util.recyclerView.AdapterHelper
 
-class CommunityAdapter(
+class PersonAdapter(
     private val context: Context,
     private val offlineManager: OfflineManager,
-    private val canSelectMultipleCommunities: Boolean,
-    private val onTooManyCommunities: (Int) -> Unit = {},
-    private val onSingleCommunitySelected: (
-        CommunityRef.CommunityRefByName, icon: String?, communityId: Int
-    ) -> Unit = { _, _, _ -> },
+    private val canSelectMultiplePersons: Boolean,
+    private val instance: String,
+    private val onTooManyPersons: (Int) -> Unit = {},
+    private val onSinglePersonSelected: (
+        PersonRef.PersonRefByName, icon: String?, personId: Int) -> Unit = { _, _, _ -> },
+    private val maxSelectedPersons: Int = 100,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private sealed interface Item {
@@ -40,37 +55,38 @@ class CommunityAdapter(
             val text: String,
         ) : Item
 
-        data class SelectedCommunityItem(
-            val communityRef: CommunityRef.CommunityRefByName,
+        data class SelectedPersonItem(
+            val personRef: PersonRef.PersonRefByName,
         ) : Item
 
-        data class SearchResultCommunityItem(
+        data class SearchResultPersonItem(
             val text: String,
-            val communityView: CommunityView,
-            val monthlyActiveUsers: Int,
+            val personView: PersonView,
             val isChecked: Boolean,
         ) : Item
     }
 
-    var selectedCommunities = LinkedHashSet<CommunityRef.CommunityRefByName>()
+    private val unimportantColor: Int = ContextCompat.getColor(context, R.color.colorTextFaint)
+
+    var selectedPersons = LinkedHashSet<PersonRef.PersonRefByName>()
     private var serverResultsInProgress = false
-    private var serverQueryResults: List<CommunityView> = listOf()
+    private var serverQueryResults: List<PersonView> = listOf()
 
     private var query: String? = null
 
     private val adapterHelper = AdapterHelper<Item> (
         areItemsTheSame = { old, new ->
             old::class == new::class && when (old) {
-                is Item.SelectedCommunityItem -> {
+                is Item.SelectedPersonItem -> {
                     old == new
                 }
                 is Item.GroupHeaderItem -> {
                     old.text == (new as Item.GroupHeaderItem).text
                 }
                 is Item.NoResultsItem -> true
-                is Item.SearchResultCommunityItem -> {
-                    old.communityView.community.id ==
-                        (new as Item.SearchResultCommunityItem).communityView.community.id
+                is Item.SearchResultPersonItem -> {
+                    old.personView.person.id ==
+                        (new as Item.SearchResultPersonItem).personView.person.id
                 }
             }
         },
@@ -89,57 +105,82 @@ class CommunityAdapter(
         }
 
         addItemType(
-            clazz = Item.SelectedCommunityItem::class,
-            inflateFn = CommunitySelectorSelectedCommunityItemBinding::inflate,
+            clazz = Item.SelectedPersonItem::class,
+            inflateFn = PersonSelectorSelectedPersonItemBinding::inflate,
         ) { item, b, h ->
-            b.icon.load(R.drawable.ic_subreddit_default)
+            b.icon.setImageDrawable(context.getDrawableCompat(R.drawable.baseline_person_24)?.tint(context.getColorFromAttribute(
+                androidx.appcompat.R.attr.colorControlNormal)))
 
-            b.title.text = item.communityRef.name
+            b.title.text = buildSpannedString {
+                append(item.personRef.name)
 
-            @Suppress("SetTextI18n")
-            b.monthlyActives.text = "(${item.communityRef.instance})"
+                if (item.personRef.instance != instance) {
+                    val s = length
+                    append("@")
+                    append(item.personRef.instance)
+                    val e = length
+                    setSpan(
+                        ForegroundColorSpan(unimportantColor),
+                        s,
+                        e,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+                    )
+                }
+            }
 
             b.checkbox.isChecked = true
             b.checkbox.setOnClickListener {
-                toggleCommunity(item.communityRef)
+                toggleCommunity(item.personRef)
             }
             h.itemView.setOnClickListener {
-                toggleCommunity(item.communityRef)
+                toggleCommunity(item.personRef)
             }
         }
         addItemType(
-            clazz = Item.SearchResultCommunityItem::class,
-            inflateFn = CommunitySelectorSearchResultCommunityItemBinding::inflate,
+            clazz = Item.SearchResultPersonItem::class,
+            inflateFn = PersonSelectorSearchResultPersonItemBinding::inflate,
         ) { item, b, h ->
-            b.icon.load(R.drawable.ic_subreddit_default)
-            offlineManager.fetchImage(h.itemView, item.communityView.community.icon) {
+            b.icon.setImageDrawable(context.getDrawableCompat(R.drawable.baseline_person_24)?.tint(context.getColorFromAttribute(
+                androidx.appcompat.R.attr.colorControlNormal)))
+
+            offlineManager.fetchImage(h.itemView, item.personView.person.avatar) {
                 b.icon.load(it)
             }
 
-            b.title.text = item.text
-            val mauString = LemmyUtils.abbrevNumber(item.monthlyActiveUsers.toLong())
+            b.title.text = buildSpannedString {
+                append(item.text)
 
-            @Suppress("SetTextI18n")
-            b.monthlyActives.text = "(${context.getString(R.string.mau_format, mauString)}) " +
-                "(${item.communityView.community.instance})"
+                if (item.personView.person.instance != instance) {
+                    val s = length
+                    append("@")
+                    append(item.personView.person.instance)
+                    val e = length
+                    setSpan(
+                        ForegroundColorSpan(unimportantColor),
+                        s,
+                        e,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+                    )
+                }
+            }
 
-            if (canSelectMultipleCommunities) {
+            if (canSelectMultiplePersons) {
                 b.checkbox.visibility = View.VISIBLE
             } else {
                 b.checkbox.visibility = View.GONE
             }
             b.checkbox.isChecked = item.isChecked
             b.checkbox.setOnClickListener {
-                toggleCommunity(item.communityView.community.toCommunityRef())
+                toggleCommunity(item.personView.person.toPersonRef())
             }
             h.itemView.setOnClickListener {
-                if (canSelectMultipleCommunities) {
-                    toggleCommunity(item.communityView.community.toCommunityRef())
+                if (canSelectMultiplePersons) {
+                    toggleCommunity(item.personView.person.toPersonRef())
                 } else {
-                    onSingleCommunitySelected(
-                        item.communityView.community.toCommunityRef(),
-                        item.communityView.community.icon,
-                        item.communityView.community.id,
+                    onSinglePersonSelected(
+                        item.personView.person.toPersonRef(),
+                        item.personView.person.avatar,
+                        item.personView.person.id,
                     )
                 }
             }
@@ -152,14 +193,14 @@ class CommunityAdapter(
         }
     }
 
-    private fun toggleCommunity(ref: CommunityRef.CommunityRefByName) {
-        if (selectedCommunities.contains(ref)) {
-            selectedCommunities.remove(ref)
+    private fun toggleCommunity(ref: PersonRef.PersonRefByName) {
+        if (selectedPersons.contains(ref)) {
+            selectedPersons.remove(ref)
         } else {
-            if (selectedCommunities.size == MULTI_COMMUNITY_DATA_SOURCE_LIMIT) {
-                onTooManyCommunities(MULTI_COMMUNITY_DATA_SOURCE_LIMIT)
+            if (selectedPersons.size == maxSelectedPersons) {
+                onTooManyPersons(maxSelectedPersons)
             } else {
-                selectedCommunities.add(ref)
+                selectedPersons.add(ref)
             }
         }
 
@@ -183,9 +224,9 @@ class CommunityAdapter(
 
     override fun getItemCount(): Int = adapterHelper.itemCount
 
-    fun setSelectedCommunities(selectedCommunities: List<CommunityRef.CommunityRefByName>) {
-        this.selectedCommunities.clear()
-        this.selectedCommunities.addAll(selectedCommunities)
+    fun setSelectedPersons(selectedCommunities: List<PersonRef.PersonRefByName>) {
+        this.selectedPersons.clear()
+        this.selectedPersons.addAll(selectedCommunities)
 
         refreshItems { }
     }
@@ -196,13 +237,13 @@ class CommunityAdapter(
 
         val newItems = mutableListOf<Item>()
 
-        if (canSelectMultipleCommunities) {
+        if (canSelectMultiplePersons) {
             newItems.add(Item.GroupHeaderItem(context.getString(R.string.selected_communities)))
-            if (selectedCommunities.isEmpty()) {
+            if (selectedPersons.isEmpty()) {
                 newItems += Item.NoResultsItem(context.getString(R.string.no_communities_selected))
             } else {
-                selectedCommunities.forEach {
-                    newItems += Item.SelectedCommunityItem(
+                selectedPersons.forEach {
+                    newItems += Item.SelectedPersonItem(
                         it,
                     )
                 }
@@ -220,11 +261,10 @@ class CommunityAdapter(
                 newItems.add(Item.NoResultsItem(context.getString(R.string.no_results_found)))
             } else {
                 serverQueryResults.forEach {
-                    newItems += Item.SearchResultCommunityItem(
-                        it.community.name,
+                    newItems += Item.SearchResultPersonItem(
+                        it.person.name,
                         it,
-                        it.counts.users_active_month,
-                        selectedCommunities.contains(it.community.toCommunityRef())
+                        selectedPersons.contains(it.person.toPersonRef())
                     )
                 }
             }
@@ -239,7 +279,7 @@ class CommunityAdapter(
         refreshItems(cb)
     }
 
-    fun setQueryServerResults(serverQueryResults: List<CommunityView>) {
+    fun setQueryServerResults(serverQueryResults: List<PersonView>) {
         this.serverQueryResults = serverQueryResults
         serverResultsInProgress = false
 
