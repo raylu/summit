@@ -1,9 +1,8 @@
-package com.idunnololz.summit.lemmy.communities
+package com.idunnololz.summit.lemmy.modlogs
 
 import android.content.Context
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.text.StaticLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,20 +12,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.Adapter
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import coil.load
 import com.idunnololz.summit.R
 import com.idunnololz.summit.api.dto.CommunityView
-import com.idunnololz.summit.api.utils.instance
 import com.idunnololz.summit.databinding.CommunitiesLoadItemBinding
-import com.idunnololz.summit.databinding.CommunityDetailsItemBinding
 import com.idunnololz.summit.databinding.EmptyItemBinding
-import com.idunnololz.summit.databinding.FragmentCommunitiesBinding
-import com.idunnololz.summit.lemmy.LemmyTextHelper
-import com.idunnololz.summit.lemmy.LemmyUtils
+import com.idunnololz.summit.databinding.FragmentModLogsBinding
+import com.idunnololz.summit.databinding.ModEventItemBinding
+import com.idunnololz.summit.lemmy.LemmyHeaderHelper
 import com.idunnololz.summit.lemmy.PageRef
-import com.idunnololz.summit.lemmy.search.Item
+import com.idunnololz.summit.lemmy.appendSeparator
+import com.idunnololz.summit.lemmy.communities.CommunitiesFragmentDirections
 import com.idunnololz.summit.lemmy.toCommunityRef
 import com.idunnololz.summit.lemmy.utils.ListEngine
 import com.idunnololz.summit.offline.OfflineManager
@@ -34,21 +29,18 @@ import com.idunnololz.summit.util.BaseFragment
 import com.idunnololz.summit.util.BottomMenu
 import com.idunnololz.summit.util.StatefulData
 import com.idunnololz.summit.util.TextMeasurementUtils
-import com.idunnololz.summit.util.ext.getColorFromAttribute
-import com.idunnololz.summit.util.ext.getDrawableCompat
+import com.idunnololz.summit.util.dateStringToPretty
 import com.idunnololz.summit.util.ext.navigateSafe
-import com.idunnololz.summit.util.ext.tint
 import com.idunnololz.summit.util.recyclerView.AdapterHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
-class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
+class ModLogsFragment : BaseFragment<FragmentModLogsBinding>() {
 
-    private val args by navArgs<CommunitiesFragmentArgs>()
+    private val args by navArgs<ModLogsFragmentArgs>()
 
-    private val viewModel: CommunitiesViewModel by viewModels()
+    private val viewModel: ModLogsViewModel by viewModels()
 
     @Inject
     lateinit var offlineManager: OfflineManager
@@ -61,10 +53,10 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
         super.onCreateView(inflater, container, savedInstanceState)
 
         requireMainActivity().apply {
-            setupForFragment<CommunitiesFragment>()
+            setupForFragment<ModLogsFragment>()
         }
 
-        setBinding(FragmentCommunitiesBinding.inflate(inflater, container, false))
+        setBinding(FragmentModLogsBinding.inflate(inflater, container, false))
 
         return binding.root
     }
@@ -82,14 +74,14 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
 
             supportActionBar?.setDisplayShowHomeEnabled(true)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            supportActionBar?.title = getString(R.string.communities)
+            supportActionBar?.title = getString(R.string.mod_logs)
 
             binding.contentContainer.updatePadding(bottom = getBottomNavHeight())
         }
 
-        viewModel.setCommunitiesInstance(args.instance)
-        if (viewModel.communitiesData.isNotStarted) {
-            viewModel.fetchCommunities(0)
+        viewModel.setArguments(args.instance, args.communityRef)
+        if (viewModel.modLogData.isNotStarted) {
+            viewModel.fetchModLogs(0)
         }
 
         runAfterLayout {
@@ -105,7 +97,7 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
             val params = TextMeasurementUtils.TextMeasurementParams.Builder
                 .from(descriptionMeasurementObject).build()
 
-            val adapter = CommunitiesEngineAdapter(
+            val adapter = ModEventsAdapter(
                 context = context,
                 rootView = root,
                 offlineManager = offlineManager,
@@ -115,7 +107,7 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
                     getMainActivity()?.launchPage(it)
                 },
                 onLoadPageClick = {
-                    viewModel.fetchCommunities(it)
+                    viewModel.fetchModLogs(it)
                 },
                 showMoreOptionsMenu = { communityView ->
                     val bottomMenu = BottomMenu(requireContext()).apply {
@@ -149,7 +141,7 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
                 (adapter.items.getOrNull(position) as? ListEngine.Item.LoadItem)
                     ?.pageIndex
                     ?.let {
-                        viewModel.fetchCommunities(it)
+                        viewModel.fetchModLogs(it)
                     }
             }
 
@@ -182,7 +174,7 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
 
             fastScroller.setRecyclerView(recyclerView)
 
-            viewModel.communitiesData.observe(viewLifecycleOwner) {
+            viewModel.modLogData.observe(viewLifecycleOwner) {
                 when (it) {
                     is StatefulData.Error -> {
                         swipeRefreshLayout.isRefreshing = false
@@ -203,7 +195,7 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
         }
     }
 
-    private class CommunitiesEngineAdapter(
+    private class ModEventsAdapter(
         private val context: Context,
         private val rootView: View,
         private val offlineManager: OfflineManager,
@@ -212,21 +204,21 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
         private val onPageClick: (PageRef) -> Unit,
         private val onLoadPageClick: (Int) -> Unit,
         private val showMoreOptionsMenu: (CommunityView) -> Unit,
-    ) : Adapter<ViewHolder>() {
+    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-        var items: List<ListEngine.Item<CommunityView>> = listOf()
+        var items: List<ListEngine.Item<ModEvent>> = listOf()
             set(value) {
                 field = value
 
                 updateItems()
             }
 
-        private val adapterHelper = AdapterHelper<ListEngine.Item<CommunityView>>(
+        private val adapterHelper = AdapterHelper<ListEngine.Item<ModEvent>>(
             areItemsTheSame = { old, new ->
                 old::class == new::class && when (old) {
                     is ListEngine.Item.DataItem -> {
-                        old.data.community.id ==
-                            (new as ListEngine.Item.DataItem).data.community.id
+                        old.data.id ==
+                            (new as ListEngine.Item.DataItem).data.id
                     }
                     is ListEngine.Item.ErrorItem ->
                         old.pageIndex == (new as ListEngine.Item.ErrorItem).pageIndex
@@ -237,111 +229,80 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
             },
         ).apply {
             addItemType(
-                clazz = ListEngine.Item.EmptyItem<CommunityView>()::class,
+                clazz = ListEngine.Item.EmptyItem<ModEvent>()::class,
                 inflateFn = EmptyItemBinding::inflate,
             ) { item, b, h ->
             }
             addItemType(
-                clazz = ListEngine.Item.DataItem<CommunityView>(null)::class,
-                inflateFn = CommunityDetailsItemBinding::inflate,
+                clazz = ListEngine.Item.DataItem<ModEvent>(null)::class,
+                inflateFn = ModEventItemBinding::inflate,
             ) { item, b, h ->
-                val community = item.data
+                val modEvent = item.data
 
-                b.overtext.text = "c/${community.community.name}@${community.community.instance}"
-                b.title.text = community.community.title
+                val timestampString: String
 
-                val mauString =
-                    LemmyUtils.abbrevNumber(community.counts.users_active_month.toLong())
-                val subsString =
-                    LemmyUtils.abbrevNumber(community.counts.subscribers.toLong())
-
-                @Suppress("SetTextI18n")
-                b.stats.text =
-                    "${context.getString(R.string.subscribers_format, subsString)}" +
-                    " ${context.getString(R.string.mau_format, mauString)}"
-
-                if (community.community.description == null) {
-                    b.description.visibility = View.GONE
-                    b.descriptionFade.visibility = View.GONE
-                } else {
-                    b.description.visibility = View.VISIBLE
-
-                    val lineCount = TextMeasurementUtils.getTextLines(
-                        LemmyTextHelper.getSpannable(context, community.community.description),
-                        params,
-                    ).size
-
-                    if (lineCount > 4) {
-                        b.descriptionFade.visibility = View.VISIBLE
-                    } else {
-                        b.descriptionFade.visibility = View.GONE
+                when (modEvent) {
+                    is ModEvent.AdminPurgeCommentViewEvent -> {
+                        timestampString = modEvent.event.admin_purge_comment.when_
                     }
-
-                    LemmyTextHelper.bindText(
-                        textView = b.description,
-                        text = community.community.description,
-                        instance = instance,
-                        highlight = null,
-                        onImageClick = {},
-                        onVideoClick = {},
-                        onPageClick = {},
-                        onLinkClick = { _, _, _ -> },
-                        onLinkLongClick = { _, _ -> },
-                    )
-                }
-
-                if (community.community.banner.isNullOrBlank()) {
-                    b.banner.visibility = View.GONE
-                } else {
-                    b.banner.visibility = View.VISIBLE
-
-                    b.banner.load(R.drawable.thumbnail_placeholder_16_9)
-                    offlineManager.fetchImageWithError(
-                        rootView,
-                        community.community.banner,
-                        {
-                            b.banner.load(it)
-                        },
-                        {
-                            b.banner.visibility = View.GONE
-                        },
-                    )
-                }
-
-                if (community.community.icon == null) {
-                    context.getDrawableCompat(R.drawable.ic_community_24)
-                        ?.tint(
-                            context.getColorFromAttribute(
-                                androidx.appcompat.R.attr.colorControlNormal,
-                            ),
-                        )
-                        ?.let {
-                            b.icon.setImageDrawable(it)
-                        }
-                        ?: run {
-                            b.icon.setImageDrawable(null)
-                        }
-                } else {
-                    offlineManager.fetchImage(rootView, community.community.icon) {
-                        b.icon.load(it)
+                    is ModEvent.AdminPurgeCommunityViewEvent -> {
+                        timestampString = modEvent.event.admin_purge_community.when_
+                    }
+                    is ModEvent.AdminPurgePersonViewEvent -> {
+                        timestampString = modEvent.event.admin_purge_person.when_
+                    }
+                    is ModEvent.AdminPurgePostViewEvent -> {
+                        timestampString = modEvent.event.admin_purge_post.when_
+                    }
+                    is ModEvent.ModAddCommunityViewEvent -> {
+                        timestampString = modEvent.event.mod_add_community.when_
+                    }
+                    is ModEvent.ModAddViewEvent -> {
+                        timestampString = modEvent.event.mod_add.when_
+                    }
+                    is ModEvent.ModBanFromCommunityViewEvent -> {
+                        timestampString = modEvent.event.mod_ban_from_community.when_
+                    }
+                    is ModEvent.ModBanViewEvent -> {
+                        timestampString = modEvent.event.mod_ban.when_
+                    }
+                    is ModEvent.ModFeaturePostViewEvent -> {
+                        timestampString = modEvent.event.mod_feature_post.when_
+                    }
+                    is ModEvent.ModHideCommunityViewEvent -> {
+                        timestampString = modEvent.event.mod_hide_community.when_
+                    }
+                    is ModEvent.ModLockPostViewEvent -> {
+                        timestampString = modEvent.event.mod_lock_post.when_
+                    }
+                    is ModEvent.ModRemoveCommentViewEvent -> {
+                        timestampString = modEvent.event.mod_remove_comment.when_
+                    }
+                    is ModEvent.ModRemoveCommunityViewEvent -> {
+                        timestampString = modEvent.event.mod_remove_community.when_
+                    }
+                    is ModEvent.ModRemovePostViewEvent -> {
+                        timestampString = modEvent.event.mod_remove_post.when_
+                    }
+                    is ModEvent.ModTransferCommunityViewEvent -> {
+                        timestampString = modEvent.event.mod_transfer_community.when_
                     }
                 }
 
-                h.itemView.setOnClickListener {
-                    onPageClick(community.community.toCommunityRef())
-                }
-                b.moreButton.setOnClickListener {
-                    showMoreOptionsMenu(item.data)
+                b.overtext.text = SpannableStringBuilder().apply {
+                    append(dateStringToPretty(context, modEvent.ts))
+                    appendSeparator()
+                    append(modEvent.actionType.toString())
                 }
             }
             addItemType(
-                clazz = ListEngine.Item.LoadItem<CommunityView>()::class,
+                clazz = ListEngine.Item.LoadItem<ModEvent>()::class,
                 inflateFn = CommunitiesLoadItemBinding::inflate,
             ) { item, b, h ->
                 b.loadingView.showProgressBar()
             }
             addItemType(
-                clazz = ListEngine.Item.ErrorItem<CommunityView>()::class,
+                clazz = ListEngine.Item.ErrorItem<ModEvent>()::class,
                 inflateFn = CommunitiesLoadItemBinding::inflate,
             ) { item, b, h ->
                 b.loadingView.showDefaultErrorMessageFor(item.error)
@@ -354,12 +315,12 @@ class CommunitiesFragment : BaseFragment<FragmentCommunitiesBinding>() {
         override fun getItemViewType(position: Int): Int =
             adapterHelper.getItemViewType(position)
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
             adapterHelper.onCreateViewHolder(parent, viewType)
 
         override fun getItemCount(): Int = adapterHelper.itemCount
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) =
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) =
             adapterHelper.onBindViewHolder(holder, position)
 
         fun updateItems() {

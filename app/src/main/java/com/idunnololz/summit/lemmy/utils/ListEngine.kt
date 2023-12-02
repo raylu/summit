@@ -1,15 +1,13 @@
-package com.idunnololz.summit.lemmy.communities
+package com.idunnololz.summit.lemmy.utils
 
-import com.idunnololz.summit.api.dto.CommunityView
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class CommunitiesEngine {
+class ListEngine<T> {
+    private val pages = mutableMapOf<Int, Page<T>>()
 
-    private val pages = mutableMapOf<Int, Page>()
+    val items = MutableStateFlow<List<Item<T>>>(listOf())
 
-    val items = MutableStateFlow<List<Item>>(listOf())
-
-    suspend fun addPage(page: Int, communities: Result<List<CommunityView>>, hasMore: Boolean) {
+    suspend fun addPage(page: Int, communities: Result<List<T>>, hasMore: Boolean) {
         pages[page] = Page(
             pageIndex = page,
             data = communities.fold(
@@ -27,12 +25,13 @@ class CommunitiesEngine {
     }
 
     private suspend fun buildItems() {
-        val items = mutableListOf<Item>()
+        val items = mutableListOf<Item<T>>()
 
         val pages = pages.values.sortedBy { it.pageIndex }
 
         if (pages.isEmpty()) {
-            items.add(Item.EmptyItem)
+            @Suppress("UNCHECKED_CAST")
+            items.add(Item.EmptyItem())
             this.items.emit(items)
             return
         }
@@ -53,7 +52,7 @@ class CommunitiesEngine {
             page.data
                 .onSuccess {
                     for (community in it.communities) {
-                        items.add(Item.CommunityItem(community))
+                        items.add(Item.DataItem(community))
                     }
                 }
                 .onFailure {
@@ -73,30 +72,35 @@ class CommunitiesEngine {
         this.items.emit(listOf())
     }
 
-    sealed interface Item {
-        data class CommunityItem(
-            val community: CommunityView,
-        ) : Item
+    sealed interface Item<T> {
+        data class DataItem<T>(
+            private val _data: T?,
+        ) : Item<T> {
+            val data: T
+                get() = _data!!
+        }
 
-        data object EmptyItem : Item
+        class EmptyItem<T>() : Item<T>
 
-        data class LoadItem(
-            val pageIndex: Int,
-        ) : Item
+        data class LoadItem<T>(
+            val pageIndex: Int = 0,
+        ) : Item<T>
 
-        data class ErrorItem(
+        data class ErrorItem<T>(
             val pageIndex: Int,
             val error: Throwable,
-        ) : Item
+        ) : Item<T> {
+            constructor() : this(0, RuntimeException())
+        }
     }
 
-    data class Page(
+    data class Page<T>(
         val pageIndex: Int,
-        val data: Result<Data>,
+        val data: Result<Data<T>>,
         val hasMore: Boolean,
     )
 
-    data class Data(
-        val communities: List<CommunityView>,
+    data class Data<T>(
+        val communities: List<T>,
     )
 }
