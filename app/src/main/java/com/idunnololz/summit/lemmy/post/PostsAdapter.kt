@@ -199,6 +199,8 @@ class PostsAdapter(
 
     private var seenCommentIds = mutableSetOf<CommentId>()
 
+    private var collapsedItemIds = mutableSetOf<Long>()
+
     private var query: String? = null
     var currentMatch: QueryResult? = null
         set(value) {
@@ -793,7 +795,7 @@ class PostsAdapter(
                 val changed = autoCollapseComments(rawData.commentTree)
 
                 val postView = rawData.postView
-                val commentItems = rawData.commentTree.flatten()
+                val commentItems = rawData.commentTree.flatten(collapsedItemIds)
                 finalItems += HeaderItem(
                     postView = postView.post,
                     videoState = videoState,
@@ -839,7 +841,7 @@ class PostsAdapter(
                                 comment = commentView.comment,
                                 depth = commentItem.depth,
                                 baseDepth = 0,
-                                isExpanded = !commentView.isCollapsed || isCurrentMatchThisComment,
+                                isExpanded = !collapsedItemIds.contains(commentView.id) || isCurrentMatchThisComment,
                                 isPending = false,
                                 view = commentView,
                                 childrenCount = commentItem.children.size,
@@ -872,7 +874,7 @@ class PostsAdapter(
                                 author = commentView.author,
                                 depth = commentItem.depth,
                                 baseDepth = 0,
-                                isExpanded = !commentView.isCollapsed,
+                                isExpanded = !collapsedItemIds.contains(commentView.id),
                                 isPending = false,
                                 view = commentView,
                                 childrenCount = commentItem.children.size,
@@ -908,7 +910,7 @@ class PostsAdapter(
                                 depth = commentItem.depth,
                                 baseDepth = 0,
                                 screenshotMode,
-                                isExpanded = !commentView.isCollapsed,
+                                isExpanded = !collapsedItemIds.contains(commentView.id),
                             )
                         }
                     }
@@ -1013,9 +1015,9 @@ class PostsAdapter(
                             upvoteRate < autoCollapseCommentThreshold && totalVotes >= 10
 
                         if (autoCollapse &&
-                            !commentView.isCollapsed
+                            !collapsedItemIds.contains(commentView.id)
                         ) {
-                            commentView.isCollapsed = true
+                            collapsedItemIds.add(commentView.id)
                             changed = true
                         }
                     }
@@ -1126,9 +1128,9 @@ class PostsAdapter(
         if (position < 0) return
 
         when (val item = items[position]) {
-            is CommentItem -> item.view.isCollapsed = true
-            is PendingCommentItem -> item.view.isCollapsed = true
-            is Item.MissingCommentItem -> item.view.isCollapsed = true
+            is CommentItem -> collapsedItemIds.add(item.view.id)
+            is PendingCommentItem -> collapsedItemIds.add(item.view.id)
+            is Item.MissingCommentItem -> collapsedItemIds.add(item.view.id)
             FooterItem,
             is HeaderItem,
             is MoreCommentsItem,
@@ -1144,9 +1146,9 @@ class PostsAdapter(
         if (position < 0) return
 
         when (val item = items[position]) {
-            is CommentItem -> item.view.isCollapsed = false
-            is PendingCommentItem -> item.view.isCollapsed = false
-            is Item.MissingCommentItem -> item.view.isCollapsed = false
+            is CommentItem -> collapsedItemIds.remove(item.view.id)
+            is PendingCommentItem -> collapsedItemIds.remove(item.view.id)
+            is Item.MissingCommentItem -> collapsedItemIds.remove(item.view.id)
             FooterItem,
             is HeaderItem,
             is MoreCommentsItem,
@@ -1160,9 +1162,9 @@ class PostsAdapter(
 
     fun toggleSection(position: Int) {
         val isCollapsed = when (val item = items[position]) {
-            is CommentItem -> item.view.isCollapsed
-            is PendingCommentItem -> item.view.isCollapsed
-            is Item.MissingCommentItem -> item.view.isCollapsed
+            is CommentItem -> collapsedItemIds.contains(item.view.id)
+            is PendingCommentItem -> collapsedItemIds.contains(item.view.id)
+            is Item.MissingCommentItem -> collapsedItemIds.contains(item.view.id)
             FooterItem,
             is HeaderItem,
             is MoreCommentsItem,
