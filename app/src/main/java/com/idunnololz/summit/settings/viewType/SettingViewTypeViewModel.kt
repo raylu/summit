@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings.view_type
+package com.idunnololz.summit.settings.viewType
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

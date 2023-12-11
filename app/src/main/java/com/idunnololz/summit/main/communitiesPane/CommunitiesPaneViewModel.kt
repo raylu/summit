@@ -1,4 +1,4 @@
-package com.idunnololz.summit.main.communities_pane
+package com.idunnololz.summit.main.communitiesPane
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner

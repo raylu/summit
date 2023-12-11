@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings.view_type
+package com.idunnololz.summit.settings.viewType
 
 import android.os.Bundle
 import android.view.LayoutInflater
