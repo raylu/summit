@@ -1,9 +1,11 @@
-package com.idunnololz.summit.settings.accounts.perAccount
+package com.idunnololz.summit.settings.perAccount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.idunnololz.summit.account.Account
 import com.idunnololz.summit.account.AccountManager
+import com.idunnololz.summit.preferences.PreferenceManager
+import com.idunnololz.summit.preferences.Preferences
 import com.idunnololz.summit.util.StatefulLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -12,12 +14,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingPerAccountViewModel @Inject constructor(
     private val accountManager: AccountManager,
+    private val preferenceManager: PreferenceManager
 ) : ViewModel() {
 
-    val account = StatefulLiveData<Account>()
+    val preferenceData = StatefulLiveData<PreferenceData>()
 
     fun loadAccount(accountId: Long) {
-        account.setIsLoading()
+        preferenceData.setIsLoading()
 
         viewModelScope.launch {
             val account = if (accountId == 0L) {
@@ -27,12 +30,22 @@ class SettingPerAccountViewModel @Inject constructor(
             }
 
             if (account != null) {
-                this@SettingPerAccountViewModel.account.setValue(account)
+                preferenceData.setValue(
+                    PreferenceData(
+                        account,
+                        preferenceManager.getOnlyPreferencesForAccount(account)
+                    )
+                )
             } else {
-                this@SettingPerAccountViewModel.account.setError(NoAccountError())
+                this@SettingPerAccountViewModel.preferenceData.setError(NoAccountError())
             }
         }
     }
 
     class NoAccountError : Exception()
+
+    class PreferenceData(
+        val account: Account,
+        val preferences: Preferences,
+    )
 }
