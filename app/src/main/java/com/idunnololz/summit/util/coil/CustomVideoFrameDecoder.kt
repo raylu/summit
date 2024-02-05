@@ -1,4 +1,4 @@
-package com.idunnololz.summit.util
+package com.idunnololz.summit.util.coil
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
