@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings.webSettings.blockList.community
+package com.idunnololz.summit.settings.webSettings.blockList.instance
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,19 +10,22 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.idunnololz.summit.R
 import com.idunnololz.summit.api.dto.CommunityId
+import com.idunnololz.summit.api.dto.InstanceId
 import com.idunnololz.summit.api.utils.fullName
 import com.idunnololz.summit.databinding.BlockListCommunityItemBinding
+import com.idunnololz.summit.databinding.BlockListInstanceItemBinding
 import com.idunnololz.summit.databinding.FragmentSettingsCommunityBlockListBinding
 import com.idunnololz.summit.settings.SettingsFragment
 import com.idunnololz.summit.settings.webSettings.blockList.SettingsAccountBlockListViewModel
 import com.idunnololz.summit.settings.webSettings.blockList.SettingsAccountBlockListViewModel.BlockedCommunityItem
+import com.idunnololz.summit.settings.webSettings.blockList.SettingsAccountBlockListViewModel.BlockedInstanceItem
 import com.idunnololz.summit.util.BaseFragment
 import com.idunnololz.summit.util.StatefulData
 import com.idunnololz.summit.util.recyclerView.AdapterHelper
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SettingsCommunityBlockListFragment : BaseFragment<FragmentSettingsCommunityBlockListBinding>() {
+class SettingsInstanceBlockListFragment : BaseFragment<FragmentSettingsCommunityBlockListBinding>() {
 
     private val viewModel: SettingsAccountBlockListViewModel by viewModels()
 
@@ -52,20 +55,20 @@ class SettingsCommunityBlockListFragment : BaseFragment<FragmentSettingsCommunit
 
             supportActionBar?.setDisplayShowHomeEnabled(true)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            supportActionBar?.title = context.getString(R.string.blocked_communities)
+            supportActionBar?.title = context.getString(R.string.blocked_instances)
         }
 
         with(binding) {
-            val adapter = CommunityBlockListAdapter(
-                onRemoveCommunity = {
-                    viewModel.unblockCommunity(it)
+            val adapter = InstanceBlockListAdapter(
+                onRemoveInstance = {
+                    viewModel.unblockInstance(it)
                 },
             )
             binding.recyclerView.setHasFixedSize(true)
             binding.recyclerView.adapter = adapter
             binding.recyclerView.layoutManager = LinearLayoutManager(context)
 
-            viewModel.communityBlockList.observe(viewLifecycleOwner) {
+            viewModel.instanceBlockList.observe(viewLifecycleOwner) {
                 when (it) {
                     is StatefulData.Error -> loadingView.showDefaultErrorMessageFor(it.error)
                     is StatefulData.Loading -> loadingView.showProgressBar()
@@ -84,25 +87,24 @@ class SettingsCommunityBlockListFragment : BaseFragment<FragmentSettingsCommunit
         }
     }
 
-    private class CommunityBlockListAdapter(
-        val onRemoveCommunity: (CommunityId) -> Unit,
+    private class InstanceBlockListAdapter(
+        val onRemoveInstance: (InstanceId) -> Unit,
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-        var data: List<BlockedCommunityItem> = listOf()
+        var data: List<BlockedInstanceItem> = listOf()
             set(value) {
                 field = value
 
                 refreshItems()
             }
 
-        private val adapterHelper = AdapterHelper<BlockedCommunityItem>(
+        private val adapterHelper = AdapterHelper<BlockedInstanceItem>(
             areItemsTheSame = { old, new ->
-                old.blockedCommunity.community.id == new.blockedCommunity.community.id
+                old.blockedInstance.instance.id == new.blockedInstance.instance.id
             },
         ).apply {
-            addItemType(BlockedCommunityItem::class, BlockListCommunityItemBinding::inflate) { item, b, h ->
-                b.icon.load(item.blockedCommunity.community.icon)
-                b.title.text = item.blockedCommunity.community.fullName
+            addItemType(BlockedInstanceItem::class, BlockListInstanceItemBinding::inflate) { item, b, h ->
+                b.title.text = item.blockedInstance.instance.domain
 
                 if (item.isRemoving) {
                     b.delete.visibility = View.GONE
@@ -113,7 +115,7 @@ class SettingsCommunityBlockListFragment : BaseFragment<FragmentSettingsCommunit
                 }
 
                 b.delete.setOnClickListener {
-                    onRemoveCommunity(item.blockedCommunity.community.id)
+                    onRemoveInstance(item.blockedInstance.instance.id)
                 }
             }
         }
