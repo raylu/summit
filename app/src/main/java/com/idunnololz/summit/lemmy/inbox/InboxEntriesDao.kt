@@ -27,7 +27,10 @@ interface InboxEntriesDao {
     suspend fun count(): Int
 
     @Query("SELECT * FROM inbox_entries WHERE notification_id = :notificationId")
-    suspend fun findInboxEntries(notificationId: Int): List<InboxEntry>
+    suspend fun findInboxEntriesByNotificationId(notificationId: Int): List<InboxEntry>
+
+    @Query("SELECT * FROM inbox_entries WHERE item_id = :itemId")
+    suspend fun findInboxEntriesByItemId(itemId: Int): List<InboxEntry>
 
     @Query(
         "DELETE FROM inbox_entries WHERE id IN (SELECT id FROM inbox_entries ORDER BY ts DESC " +
