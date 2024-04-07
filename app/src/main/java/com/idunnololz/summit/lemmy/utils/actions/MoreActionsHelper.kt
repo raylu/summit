@@ -1,13 +1,13 @@
-package com.idunnololz.summit.lemmy
+package com.idunnololz.summit.lemmy.utils.actions
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import arrow.core.Either
 import com.idunnololz.summit.account.Account
 import com.idunnololz.summit.account.AccountActionsManager
 import com.idunnololz.summit.account.AccountManager
 import com.idunnololz.summit.account.info.AccountInfoManager
+import com.idunnololz.summit.account.info.FullAccount
 import com.idunnololz.summit.actions.SavedManager
 import com.idunnololz.summit.api.AccountAwareLemmyClient
 import com.idunnololz.summit.api.AccountInstanceMismatchException
@@ -18,14 +18,18 @@ import com.idunnololz.summit.api.dto.InstanceId
 import com.idunnololz.summit.api.dto.PersonId
 import com.idunnololz.summit.api.dto.PostId
 import com.idunnololz.summit.api.dto.PostView
+import com.idunnololz.summit.coroutine.CoroutineScopeFactory
 import com.idunnololz.summit.fileprovider.FileProviderHelper
 import com.idunnololz.summit.hidePosts.HiddenPostsManager
+import com.idunnololz.summit.lemmy.CommunityRef
+import com.idunnololz.summit.lemmy.PersonRef
+import com.idunnololz.summit.lemmy.PostRef
+import com.idunnololz.summit.lemmy.toPersonRef
 import com.idunnololz.summit.lemmy.utils.VotableRef
 import com.idunnololz.summit.offline.OfflineManager
 import com.idunnololz.summit.util.FileDownloadHelper
 import com.idunnololz.summit.util.StatefulLiveData
 import com.idunnololz.summit.video.VideoDownloadManager
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -35,9 +39,10 @@ import okio.buffer
 import okio.sink
 import okio.source
 import javax.inject.Inject
+import javax.inject.Singleton
 
-@HiltViewModel
-class MoreActionsViewModel @Inject constructor(
+@Singleton
+class MoreActionsHelper @Inject constructor(
     @ApplicationContext private val context: Context,
     var apiClient: AccountAwareLemmyClient,
     val accountManager: AccountManager,
@@ -48,14 +53,19 @@ class MoreActionsViewModel @Inject constructor(
     private val videoDownloadManager: VideoDownloadManager,
     private val fileDownloadHelper: FileDownloadHelper,
     private val offlineManager: OfflineManager,
-) : ViewModel() {
+    coroutineScopeFactory: CoroutineScopeFactory,
+) {
+
+    private val coroutineScope = coroutineScopeFactory.create()
 
     val currentAccount: Account?
         get() = apiClient.accountForInstance()
+    val fullAccount: FullAccount?
+        get() = accountInfoManager.currentFullAccount.value
     val apiInstance: String
         get() = apiClient.instance
 
-    val blockCommunityResult = StatefulLiveData<Unit>()
+    val blockCommunityResult = StatefulLiveData<BlockCommunityResult>()
     val blockPersonResult = StatefulLiveData<BlockPersonResult>()
     val blockInstanceResult = StatefulLiveData<BlockInstanceResult>()
     val saveCommentResult = StatefulLiveData<CommentView>()
@@ -68,48 +78,74 @@ class MoreActionsViewModel @Inject constructor(
 
     private var currentPageInstance: String? = null
 
-    fun blockCommunity(id: CommunityId, block: Boolean = true) {
+    fun blockCommunity(communityRef: CommunityRef.CommunityRefByName, block: Boolean = true) {
         blockCommunityResult.setIsLoading()
-        viewModelScope.launch {
-            ensureRightInstance { apiClient.blockCommunity(id, block) }
+        coroutineScope.launch {
+            ensureRightInstance {
+                apiClient.fetchCommunityWithRetry(
+                    idOrName = Either.Right(communityRef.getServerId(apiInstance)),
+                    force = false,
+                )
+            }
+                .onSuccess {
+                    blockCommunityInternal(it.community_view.community.id, block)
+                }
                 .onFailure {
                     blockCommunityResult.postError(it)
                 }
+        }
+    }
+
+    fun blockCommunity(id: CommunityId, block: Boolean = true) {
+        blockCommunityResult.setIsLoading()
+        coroutineScope.launch {
+            blockCommunityInternal(id, block)
+        }
+    }
+
+    fun blockPerson(personRef: PersonRef, block: Boolean = true) {
+        blockPersonResult.setIsLoading()
+        coroutineScope.launch {
+            ensureRightInstance {
+                apiClient.fetchPersonByNameWithRetry(personRef.fullName, force = false)
+            }
+                .onFailure {
+                    blockPersonResult.postError(it)
+                }
                 .onSuccess {
-                    blockCommunityResult.postValue(Unit)
+                    blockPersonInternal(it.person_view.person.id, block)
                 }
         }
     }
 
     fun blockPerson(id: PersonId, block: Boolean = true) {
         blockPersonResult.setIsLoading()
-        viewModelScope.launch {
-            ensureRightInstance { apiClient.blockPerson(id, block) }
-                .onFailure {
-                    blockPersonResult.postError(it)
-                }
-                .onSuccess {
-                    blockPersonResult.postValue(BlockPersonResult(block))
-                }
+        coroutineScope.launch {
+            blockPersonInternal(id, block)
         }
     }
 
     fun blockInstance(id: InstanceId, block: Boolean = true) {
         blockInstanceResult.setIsLoading()
-        viewModelScope.launch {
+        coroutineScope.launch {
             ensureRightInstance { apiClient.blockInstance(id, block) }
+                .onSuccess {
+                    blockInstanceResult.postValue(
+                        BlockInstanceResult(
+                            blocked = block,
+                            instanceId = id,
+                        )
+                    )
+                }
                 .onFailure {
                     blockInstanceResult.postError(it)
-                }
-                .onSuccess {
-                    blockInstanceResult.postValue(BlockInstanceResult(block))
                 }
         }
     }
 
     fun deletePost(postId: PostId) {
         deletePostResult.setIsLoading()
-        viewModelScope.launch {
+        coroutineScope.launch {
             ensureRightInstance { apiClient.deletePost(postId) }
                 .onSuccess {
                     deletePostResult.postValue(it)
@@ -121,7 +157,7 @@ class MoreActionsViewModel @Inject constructor(
     }
 
     fun deleteComment(postRef: PostRef, commentId: Int) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             accountActionsManager.deleteComment(postRef, commentId)
         }
     }
@@ -160,7 +196,7 @@ class MoreActionsViewModel @Inject constructor(
 
     fun savePost(id: PostId, save: Boolean) {
         savePostResult.setIsLoading()
-        viewModelScope.launch {
+        coroutineScope.launch {
             ensureRightInstance { apiClient.savePost(id, save) }
                 .onSuccess {
                     savePostResult.postValue(it)
@@ -173,7 +209,7 @@ class MoreActionsViewModel @Inject constructor(
     }
 
     fun saveComment(id: CommentId, save: Boolean) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             ensureRightInstance { apiClient.saveComment(id, save) }
                 .onSuccess {
                     saveCommentResult.postValue(it)
@@ -194,7 +230,7 @@ class MoreActionsViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             if (delayMs > 0) {
                 delay(delayMs)
             }
@@ -212,7 +248,7 @@ class MoreActionsViewModel @Inject constructor(
     ) {
         downloadVideoResult.setIsLoading()
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             videoDownloadManager.downloadVideo(url)
                 .onSuccess { file ->
                     fileDownloadHelper
@@ -232,22 +268,6 @@ class MoreActionsViewModel @Inject constructor(
                 .onFailure {
                     downloadVideoResult.postError(it)
                 }
-        }
-    }
-
-    private suspend fun <T> ensureRightInstance(
-        onCorrectInstance: suspend () -> Result<T>,
-    ): Result<T> {
-        val currentPageInstance = currentPageInstance
-        return if (currentPageInstance != null && currentPageInstance != apiInstance) {
-            Result.failure(
-                AccountInstanceMismatchException(
-                    apiInstance,
-                    currentPageInstance,
-                ),
-            )
-        } else {
-            onCorrectInstance()
         }
     }
 
@@ -277,7 +297,7 @@ class MoreActionsViewModel @Inject constructor(
         offlineManager.fetchImage(
             url = url,
             listener = {
-                viewModelScope.launch {
+                coroutineScope.launch {
                     val result = withContext(Dispatchers.IO) {
                         fileDownloadHelper
                             .downloadFile(
@@ -297,12 +317,68 @@ class MoreActionsViewModel @Inject constructor(
             },
         )
     }
+
+    private suspend fun blockPersonInternal(id: PersonId, block: Boolean = true) {
+        ensureRightInstance { apiClient.blockPerson(id, block) }
+            .onFailure {
+                blockPersonResult.postError(it)
+            }
+            .onSuccess {
+                accountInfoManager.refreshAccountInfo()
+                blockPersonResult.postValue(
+                    BlockPersonResult(
+                        blocked = block,
+                        personFullName = it.person.toPersonRef().fullName,
+                        personId = id,
+                    )
+                )
+            }
+    }
+
+    private suspend fun blockCommunityInternal(id: CommunityId, block: Boolean = true) {
+        ensureRightInstance { apiClient.blockCommunity(id, block) }
+            .onSuccess {
+                blockCommunityResult.postValue(
+                    BlockCommunityResult(
+                        blocked = block,
+                        communityId = id,
+                    )
+                )
+            }
+            .onFailure {
+                blockCommunityResult.postError(it)
+            }
+    }
+
+    private suspend fun <T> ensureRightInstance(
+        onCorrectInstance: suspend () -> Result<T>,
+    ): Result<T> {
+        val currentPageInstance = currentPageInstance
+        return if (currentPageInstance != null && currentPageInstance != apiInstance) {
+            Result.failure(
+                AccountInstanceMismatchException(
+                    apiInstance,
+                    currentPageInstance,
+                ),
+            )
+        } else {
+            onCorrectInstance()
+        }
+    }
 }
 
 data class BlockPersonResult(
-    val blockedPerson: Boolean,
+    val blocked: Boolean,
+    val personFullName: String,
+    val personId: PersonId,
 )
 
 data class BlockInstanceResult(
     val blocked: Boolean,
+    val instanceId: InstanceId,
+)
+
+data class BlockCommunityResult(
+    val blocked: Boolean,
+    val communityId: CommunityId,
 )
