@@ -1,4 +1,4 @@
-package com.idunnololz.summit.util
+package com.idunnololz.summit.util.coil
 
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.TextView
 import com.idunnololz.summit.R
 import io.noties.markwon.image.AsyncDrawable
-import io.noties.markwon.image.AsyncDrawableSpan
 
 object AsyncDrawableSchedulerFixed {
 
@@ -90,7 +89,7 @@ object AsyncDrawableSchedulerFixed {
         // than direct getSpans
     }
 
-    private class DrawableCallbackImpl internal constructor(
+    private class DrawableCallbackImpl(
         private val view: TextView,
         // @since 4.1.0
         private val invalidator: Invalidator,
@@ -98,7 +97,7 @@ object AsyncDrawableSchedulerFixed {
     ) : Drawable.Callback {
         // @since 4.1.0
         // interface to be used when bounds change and view must be invalidated
-        internal interface Invalidator {
+        interface Invalidator {
             fun invalidate()
         }
 
@@ -128,8 +127,8 @@ object AsyncDrawableSchedulerFixed {
             }
         }
 
-        override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) {
-            val delay = `when` - SystemClock.uptimeMillis()
+        override fun scheduleDrawable(who: Drawable, what: Runnable, whenMs: Long) {
+            val delay = whenMs - SystemClock.uptimeMillis()
             view.postDelayed(what, delay)
         }
 
@@ -138,7 +137,7 @@ object AsyncDrawableSchedulerFixed {
         }
     }
 
-    private class TextViewInvalidator internal constructor(private val textView: TextView) :
+    private class TextViewInvalidator(private val textView: TextView) :
         DrawableCallbackImpl.Invalidator, Runnable {
         override fun invalidate() {
             textView.removeCallbacks(this)

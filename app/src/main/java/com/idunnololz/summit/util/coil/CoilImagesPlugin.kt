@@ -1,4 +1,4 @@
-package com.idunnololz.summit.util
+package com.idunnololz.summit.util.coil
 
 import android.content.Context
 import android.graphics.drawable.Animatable
@@ -16,7 +16,6 @@ import io.noties.markwon.MarkwonSpansFactory
 import io.noties.markwon.image.AsyncDrawable
 import io.noties.markwon.image.AsyncDrawableLoader
 import io.noties.markwon.image.DrawableUtils
-import io.noties.markwon.image.ImageSpanFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import org.commonmark.node.Image
 
@@ -58,7 +57,9 @@ class CoilImagesPlugin internal constructor(coilStore: CoilStore, imageLoader: I
         private val coilStore: CoilStore,
         private val imageLoader: ImageLoader,
     ) : AsyncDrawableLoader() {
+
         private val cache: MutableMap<AsyncDrawable, Disposable?> = HashMap(2)
+
         override fun load(drawable: AsyncDrawable) {
             val loaded = AtomicBoolean(false)
             val target: Target = AsyncDrawableTarget(drawable, loaded, drawable.destination)
@@ -93,6 +94,7 @@ class CoilImagesPlugin internal constructor(coilStore: CoilStore, imageLoader: I
             private val loaded: AtomicBoolean,
             private val source: String,
         ) : Target {
+
             override fun onSuccess(loadedDrawable: Drawable) {
                 // @since 4.5.1 check finished flag (result can be delivered _before_ disposable is created)
                 if (cache.remove(drawable) != null ||
