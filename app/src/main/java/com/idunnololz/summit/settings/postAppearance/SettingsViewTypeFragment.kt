@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings.viewType
+package com.idunnololz.summit.settings.postAppearance
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -266,6 +266,18 @@ class SettingsViewTypeFragment :
 
                 updateRendering()
             },
+        )
+        settings.preferTextPreviewIcon.bindTo(
+            binding.preferTextPreviewIcon,
+            {
+                viewModel.currentPostUiConfig.showTextPreviewIcon
+                    ?: true
+            }, {
+                viewModel.currentPostUiConfig =
+                    viewModel.currentPostUiConfig.copy(showTextPreviewIcon = it)
+
+                updateRendering()
+            }
         )
     }
 

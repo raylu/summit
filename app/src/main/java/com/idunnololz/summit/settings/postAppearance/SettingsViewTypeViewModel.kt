@@ -1,4 +1,4 @@
-package com.idunnololz.summit.settings.viewType
+package com.idunnololz.summit.settings.postAppearance
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
