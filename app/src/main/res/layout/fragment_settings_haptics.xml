@@ -31,10 +31,17 @@
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingBottom="@dimen/footer_spacer_height">
 
                 <include
-                    android:id="@+id/use_firebase"
+                    android:id="@+id/haptics"
+                    layout="@layout/setting_item_on_off_master"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <include
+                    android:id="@+id/more_haptics"
                     layout="@layout/setting_item_on_off"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
