@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.konan.properties.loadProperties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -54,7 +56,10 @@ android {
 }
 
 sentry {
-    autoUploadProguardMapping.set(false)
+    val sentryProperties = loadProperties(File(rootDir, "sentry.properties").path)
+    if (sentryProperties["auth.token"] == null) {
+        autoUploadProguardMapping.set(false)
+    }
 }
 
 configurations.configureEach {
