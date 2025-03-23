@@ -161,5 +161,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.commonmark)
 
-//    implementation("com.squareup.leakcanary:leakcanary-android:2.14")
+//    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
