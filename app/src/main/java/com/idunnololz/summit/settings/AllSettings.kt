@@ -203,6 +203,11 @@ class MainSettings @Inject constructor(
 ) : SearchableSettings {
     override val parents: List<KClass<out SearchableSettings>> = listOf()
 
+    val settingPresets = BasicSettingItem(
+        R.drawable.baseline_tune_24,
+        context.getString(R.string.presets),
+        context.getString(R.string.presets_desc),
+    )
     val settingTheme = BasicSettingItem(
         R.drawable.baseline_palette_24,
         context.getString(R.string.theme),
@@ -320,6 +325,7 @@ class MainSettings @Inject constructor(
         SubgroupItem(
             context.getString(R.string.look_and_feel),
             listOf(
+//                settingPresets,
                 settingTheme,
                 settingPostsFeed,
                 settingPostAndComments,

@@ -73,7 +73,6 @@ dependencies {
     implementation(project(":thirdPartyModules:markwon:markwon-core"))
     implementation(project(":thirdPartyModules:markwon:markwon-ext-strikethrough"))
     implementation(project(":thirdPartyModules:markwon:markwon-ext-tables"))
-    implementation(project(":thirdPartyModules:markwon:markwon-html"))
     implementation(project(":thirdPartyModules:markwon:markwon-linkify"))
     implementation(project(":thirdPartyModules:markwon:markwon-simple-ext"))
 

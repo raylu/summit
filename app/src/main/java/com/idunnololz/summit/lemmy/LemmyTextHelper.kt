@@ -32,14 +32,14 @@ import com.idunnololz.summit.util.coil.CoilImagesPlugin.CoilStore
 import com.idunnololz.summit.util.ext.getColorCompat
 import com.idunnololz.summit.util.ext.getColorFromAttribute
 import com.idunnololz.summit.util.markwon.SpoilerPlugin
+import com.idunnololz.summit.util.markwon.SubScriptSpan
 import com.idunnololz.summit.util.markwon.SummitInlineParser
+import com.idunnololz.summit.util.markwon.SuperScriptSpan
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
 import io.noties.markwon.core.MarkwonTheme
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
-import io.noties.markwon.html.span.SubScriptSpan
-import io.noties.markwon.html.span.SuperScriptSpan
 import io.noties.markwon.image.AsyncDrawable
 import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.simple.ext.SimpleExtPlugin
@@ -240,12 +240,10 @@ class LemmyTextHelper @Inject constructor(
         }
 
         /**
-         * Combination of 4 regexes "or'd" (|) together.
-         * 1) Matches against words where the first character is a caret. Eg. '^hello'
-         * 2) Matches against full community names (!a@b.com)
+         * Matches against full community names (!a@b.com)
          */
         private val largeRegex = Pattern.compile(
-            """\^(\S+)|(]\()?(!|/?[cC]/|@|/?[uU]/)([^@\s]+)@([^@\s]+\.[^@\s)]*\w)""",
+            """(]\()?(!|/?[cC]/|@|/?[uU]/)([^@\s]+)@([^@\s]+\.[^@\s)]*\w)""",
         )
 
         private fun processAll(s: String): String {
@@ -253,16 +251,10 @@ class LemmyTextHelper @Inject constructor(
             val matcher = largeRegex.matcher(s)
             val sb = StringBuffer()
             while (matcher.find()) {
-                val g1 = matcher.group(1)
-                if (g1 != null && !g1.endsWith("^")) {
-                    matcher.appendReplacement(sb, "^${matcher.group(1)}^")
-                    continue
-                }
-
-                val linkStart = matcher.group(2)
-                val referenceTypeToken = matcher.group(3)
-                val name = matcher.group(4)
-                val instance = matcher.group(5)
+                val linkStart = matcher.group(1)
+                val referenceTypeToken = matcher.group(2)
+                val name = matcher.group(3)
+                val instance = matcher.group(4)
 
                 if (linkStart == null &&
                     referenceTypeToken != null &&

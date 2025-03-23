@@ -2025,6 +2025,10 @@
     <string name="use_test_user_agent_2">User test user-agent 2</string>
     <string name="use_okhttp">Use okhttp</string>
     <string name="use_flutter">Use flutter</string>
+    <string name="presets">Presets</string>
+    <string name="presets_desc">Customize your app experience quickly with presets</string>
+    <string name="share_a_preset">Share a preset</string>
+    <string name="static_presets_unavailable">Only community presets are available for now. Static presets are still being worked on.</string>
 
     <!-- Text for the total number of children (comments) under a comment. -->
     <plurals name="children_count_format">
