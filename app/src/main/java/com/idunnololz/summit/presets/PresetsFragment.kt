@@ -8,13 +8,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.idunnololz.summit.R
-import com.idunnololz.summit.actions.ui.ActionsTabbedFragment
 import com.idunnololz.summit.databinding.FragmentPresetsBinding
 import com.idunnololz.summit.databinding.ItemPresetsHeaderBinding
 import com.idunnololz.summit.util.BaseFragment
 import com.idunnololz.summit.util.insetViewAutomaticallyByPadding
 import com.idunnololz.summit.util.recyclerView.AdapterHelper
-import com.idunnololz.summit.util.setupForFragment
 import com.idunnololz.summit.util.setupToolbar
 
 class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
@@ -48,7 +46,6 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
             recyclerView.layoutManager = LinearLayoutManager(context)
             recyclerView.setHasFixedSize(true)
             recyclerView.adapter = adapter
-
         }
     }
 
@@ -64,7 +61,6 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
             }
         }).apply {
             addItemType(Item.HeaderItem::class, ItemPresetsHeaderBinding::inflate) { item, b, h ->
-
             }
         }
 
@@ -89,6 +85,5 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
 
             adapterHelper.setItems(newItems, this)
         }
-
     }
 }

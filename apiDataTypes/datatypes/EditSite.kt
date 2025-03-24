@@ -1,9 +1,9 @@
 package it.vercruysse.lemmyapi.v0.x19.x3.datatypes
 
+import it.vercruysse.lemmyapi.dto.ListingType
 import it.vercruysse.lemmyapi.dto.PostListingMode
 import it.vercruysse.lemmyapi.dto.RegistrationMode
 import it.vercruysse.lemmyapi.dto.SortType
-import it.vercruysse.lemmyapi.dto.ListingType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -21,7 +21,8 @@ internal data class EditSite(
     val private_instance: Boolean? = null,
     val default_theme: String? = null,
     val default_post_listing_type: ListingType? /* "All" | "Local" | "Subscribed" | "ModeratorView" */ = null,
-    val default_sort_type: SortType? /* "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled" */ = null,
+    // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
+    val default_sort_type: SortType? = null,
     val legal_information: String? = null,
     val application_email_admins: Boolean? = null,
     val hide_modlog_mod_names: Boolean? = null,

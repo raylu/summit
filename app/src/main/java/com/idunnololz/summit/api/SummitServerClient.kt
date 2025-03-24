@@ -100,7 +100,9 @@ class SummitServerClient @Inject constructor(
                 return Result.failure(CouldntFindObjectError())
             }
             // TODO: Remove these checks once v0.19 is out for everyone.
-            if (errMsg?.contains("unknown variant") == true || (errorCode == 404 && res.raw().request.url.toString().contains("site/block"))) {
+            if (errMsg?.contains("unknown variant") == true ||
+                (errorCode == 404 && res.raw().request.url.toString().contains("site/block"))
+            ) {
                 return Result.failure(NewApiException("v0.19"))
             }
 

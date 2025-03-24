@@ -156,7 +156,8 @@ class MainApplication : Application(), androidx.work.Configuration.Provider {
 
         if (preferences.useFirebase) {
             SentryAndroid.init(this) { options ->
-                options.dsn = "https://decaf7c0aa19b1c009de539fb95ad4a4@o4509018554630144.ingest.us.sentry.io/4509018556465152"
+                options.dsn =
+                    "https://decaf7c0aa19b1c009de539fb95ad4a4@o4509018554630144.ingest.us.sentry.io/4509018556465152"
                 // Add a callback that will be used before the event is sent to Sentry.
                 // With this callback, you can modify the event or, when returning null, also discard the event.
                 options.beforeSend =

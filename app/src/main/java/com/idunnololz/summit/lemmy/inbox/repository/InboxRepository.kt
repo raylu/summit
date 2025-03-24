@@ -95,8 +95,7 @@ class InboxRepository @Inject constructor(
                     return Result.failure(requireNotNull(sourceAndError.second.exceptionOrNull()))
                 }
 
-                val nextSourceAndResult = sourceToResult.maxBy {
-                        (_, result) ->
+                val nextSourceAndResult = sourceToResult.maxBy { (_, result) ->
                     result.getOrNull()?.lastUpdateTs ?: 0L
                 }
                 val nextItem = nextSourceAndResult.second.getOrNull()

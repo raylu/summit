@@ -228,7 +228,8 @@ class SearchResultsFragment : BaseFragment<FragmentSearchResultsBinding>() {
                         post,
                         jumpToComments,
                         reveal,
-                        videoState, ->
+                        videoState,
+                    ->
 
                     parentFragment.slidingPaneController?.openPost(
                         instance = instance,

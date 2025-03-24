@@ -388,7 +388,8 @@ class CommunityFragment :
                         post,
                         jumpToComments,
                         reveal,
-                        videoState, ->
+                        videoState,
+                    ->
 
                     slidingPaneController?.openPost(
                         instance = instance,

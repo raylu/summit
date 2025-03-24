@@ -1,5 +1,14 @@
 [app/**/*.{kt,kts}]
 ktlint_code_style = android_studio
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_comment-wrapping = disabled
+ktlint_standard_condition-wrapping = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_value-parameter-comment = disabled
+max_line_length = 120
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
 indent_size = 4

@@ -212,7 +212,8 @@ class CommunitiesPaneController @AssistedInject constructor(
                 clazz = Item.HomeCommunityItem::class,
                 inflateFn = HomeCommunityItemBinding::inflate,
             ) { item, b, _ ->
-                b.title.text = context.getString(R.string.home) + " (${item.communityRef.getLocalizedFullName(context)})"
+                b.title.text = context.getString(R.string.home) +
+                    " (${item.communityRef.getLocalizedFullName(context)})"
                 b.selectedIndicator.visibility = if (item.isSelected) {
                     View.VISIBLE
                 } else {

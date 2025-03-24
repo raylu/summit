@@ -1855,8 +1855,8 @@ class LemmyApiClient @Inject constructor(
         communityId: CommunityId? = null,
         page: Int? = null,
         limit: Int? = null,
-        actionType: ModlogActionType? /* "All" | "ModRemovePost" | "ModLockPost" | "ModFeaturePost" | "ModRemoveComment" | "ModRemoveCommunity" | "ModBanFromCommunity" | "ModAddCommunity" | "ModTransferCommunity" | "ModAdd" | "ModBan" | "ModHideCommunity" | "AdminPurgePerson" | "AdminPurgeCommunity" | "AdminPurgePost" | "AdminPurgeComment" */ =
-            null,
+        /* "All" | "ModRemovePost" | "ModLockPost" | "ModFeaturePost" | "ModRemoveComment" | "ModRemoveCommunity" | "ModBanFromCommunity" | "ModAddCommunity" | "ModTransferCommunity" | "ModAdd" | "ModBan" | "ModHideCommunity" | "AdminPurgePerson" | "AdminPurgeCommunity" | "AdminPurgePost" | "AdminPurgeComment" */
+        actionType: ModlogActionType? = null,
         otherPersonId: PersonId? = null,
         account: Account? = null,
         force: Boolean,
@@ -2020,7 +2020,9 @@ class LemmyApiClient @Inject constructor(
                 return Result.failure(CouldntFindObjectError())
             }
             // TODO: Remove these checks once v0.19 is out for everyone.
-            if (errMsg?.contains("unknown variant") == true || (errorCode == 404 && res.raw().request.url.toString().contains("site/block"))) {
+            if (errMsg?.contains("unknown variant") == true ||
+                (errorCode == 404 && res.raw().request.url.toString().contains("site/block"))
+            ) {
                 return Result.failure(NewApiException("v0.19"))
             }
 

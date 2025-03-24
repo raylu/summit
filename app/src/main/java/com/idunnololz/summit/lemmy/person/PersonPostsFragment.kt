@@ -125,7 +125,8 @@ class PersonPostsFragment : BaseFragment<FragmentPersonPostsBinding>(), SignInNa
                     post,
                     jumpToComments,
                     reveal,
-                    videoState, ->
+                    videoState,
+                ->
 
                 parentFragment.slidingPaneController?.openPost(
                     instance = instance,

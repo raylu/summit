@@ -104,7 +104,11 @@ class GravitySnapHelper @JvmOverloads constructor(
 
     init {
         require(
-            !(gravity != Gravity.START && gravity != Gravity.END && gravity != Gravity.BOTTOM && gravity != Gravity.TOP && gravity != Gravity.CENTER),
+            !(
+                gravity != Gravity.START && gravity != Gravity.END && gravity != Gravity.BOTTOM &&
+                    gravity != Gravity.TOP &&
+                    gravity != Gravity.CENTER
+                ),
         ) {
             "Invalid gravity value. Use START " +
                 "| END | BOTTOM | TOP | CENTER constants"

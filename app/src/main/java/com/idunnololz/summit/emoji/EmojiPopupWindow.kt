@@ -62,7 +62,8 @@ class EmojiPopupWindow @AssistedInject constructor(
 
         binding.recyclerView.apply {
             this.adapter = adapter
-            layoutManager = GridAutofitLayoutManager(context, context.resources.getDimensionPixelSize(R.dimen.emoji_item_width))
+            layoutManager =
+                GridAutofitLayoutManager(context, context.resources.getDimensionPixelSize(R.dimen.emoji_item_width))
             addItemDecoration(
                 GridSpaceItemDecoration(
                     space = context.resources.getDimensionPixelSize(R.dimen.padding_half),

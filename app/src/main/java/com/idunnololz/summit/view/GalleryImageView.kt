@@ -47,8 +47,8 @@ class GalleryImageView : ShapeableImageView {
 
     private var detector: GestureDetector
     private var scaleDetector: ScaleGestureDetector
-    private val _matrix: Matrix = Matrix()
-    private val _matrixArr = FloatArray(9)
+    private val matrix: Matrix = Matrix()
+    private val matrixArr = FloatArray(9)
 
     /**
      * Minimum zoom possible. This is variable and depends on the size of the image.
@@ -391,7 +391,7 @@ class GalleryImageView : ShapeableImageView {
         val d = drawable ?: return
 
         // Get image matrix values and place them in an array
-        imageMatrix.getValues(_matrixArr)
+        imageMatrix.getValues(matrixArr)
 
         val imageRatio = d.intrinsicWidth.toFloat() / d.intrinsicHeight.toFloat()
         val viewRatio = measuredWidth.toFloat() / measuredHeight.toFloat()
@@ -573,9 +573,9 @@ class GalleryImageView : ShapeableImageView {
     private fun updateMatrix() {
         Log.d(TAG, "curZoom: $curZoom")
 
-        _matrix.reset()
-        _matrix.postTranslate(offX + overScrollX, offY + overScrollY)
-        _matrix.postScale(curZoom, curZoom)
-        imageMatrix = _matrix
+        matrix.reset()
+        matrix.postTranslate(offX + overScrollX, offY + overScrollY)
+        matrix.postScale(curZoom, curZoom)
+        imageMatrix = matrix
     }
 }

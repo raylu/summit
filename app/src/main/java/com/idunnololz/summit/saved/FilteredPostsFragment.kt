@@ -128,7 +128,8 @@ class FilteredPostsFragment : BaseFragment<FragmentSavedPostsBinding>(), SignInN
                     post,
                     jumpToComments,
                     reveal,
-                    videoState, ->
+                    videoState,
+                ->
 
                 parentFragment.slidingPaneController?.openPost(
                     instance = instance,
