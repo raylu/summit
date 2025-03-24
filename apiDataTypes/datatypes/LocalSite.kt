@@ -18,7 +18,8 @@ internal data class LocalSite(
     val application_question: String? = null,
     val private_instance: Boolean,
     val default_theme: String,
-    val default_post_listing_type: ListingType /* "All" | "Local" | "Subscribed" | "ModeratorView" */,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val default_post_listing_type: ListingType,
     val legal_information: String? = null,
     val hide_modlog_mod_names: Boolean,
     val application_email_admins: Boolean,
@@ -29,10 +30,11 @@ internal data class LocalSite(
     val captcha_difficulty: String,
     val published: String,
     val updated: String? = null,
-    val registration_mode: RegistrationMode /* "Closed" | "RequireApplication" | "Open" */,
+    // "Closed" | "RequireApplication" | "Open"
+    val registration_mode: RegistrationMode,
     val reports_email_admins: Boolean,
     val federation_signed_fetch: Boolean,
-    // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
-    val default_post_listing_mode: PostListingMode /* "List" | "Card" | "SmallCard" */,
+    // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled" | "List" | "Card" | "SmallCard"
+    val default_post_listing_mode: PostListingMode,
     val default_sort_type: SortType,
 )

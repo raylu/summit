@@ -16,7 +16,8 @@ internal data class CommentReportView(
     val creator_is_moderator: Boolean,
     val creator_is_admin: Boolean,
     val creator_blocked: Boolean,
-    val subscribed: SubscribedType /* "Subscribed" | "NotSubscribed" | "Pending" */,
+    // "Subscribed" | "NotSubscribed" | "Pending"
+    val subscribed: SubscribedType,
     val saved: Boolean,
     val my_vote: Int = 0,
     val resolver: Person? = null,

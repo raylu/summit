@@ -21,5 +21,6 @@ internal data class Community(
     val hidden: Boolean,
     val posting_restricted_to_mods: Boolean,
     val instance_id: InstanceId,
-    val visibility: CommunityVisibility /* "Public" | "LocalOnly" */,
+    // "Public" | "LocalOnly"
+    val visibility: CommunityVisibility,
 )

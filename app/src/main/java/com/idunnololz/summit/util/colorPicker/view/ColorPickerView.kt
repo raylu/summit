@@ -84,11 +84,11 @@ class ColorPickerView : ConstraintLayout, LifecycleObserver, ColorPicker, ColorP
     lateinit var brightnessSlider: Slider
         private set
 
-    var _listener: OnColorPickedListener? = null
+    var listener: OnColorPickedListener? = null
     private var colorListener: ColorPickerViewListener = object : ColorListener {
         override fun onColorSelected(color: Int, fromUser: Boolean) {
             if (fromUser) {
-                _listener?.onColorPicked(this@ColorPickerView, color)
+                listener?.onColorPicked(this@ColorPickerView, color)
             }
         }
     }
@@ -439,7 +439,7 @@ class ColorPickerView : ConstraintLayout, LifecycleObserver, ColorPicker, ColorP
     }
 
     override fun setListener(listener: OnColorPickedListener?) {
-        _listener = listener
+        listener = listener
     }
 
     override val colorPicker: ColorPicker

@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class SearchResponse(
-    val type_: SearchType /* "All" | "Comments" | "Posts" | "Communities" | "Users" | "Url" */,
+    // "All" | "Comments" | "Posts" | "Communities" | "Users" | "Url"
+    val type_: SearchType,
     val comments: List<CommentView>,
     val posts: List<PostView>,
     val communities: List<CommunityView>,

@@ -13,7 +13,8 @@ internal data class SaveUserSettings(
     val theme: String? = null,
     // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
     val default_sort_type: SortType? = null,
-    val default_listing_type: ListingType? /* "All" | "Local" | "Subscribed" | "ModeratorView" */ = null,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val default_listing_type: ListingType? = null,
     val interface_language: String? = null,
     val avatar: String? = null,
     val banner: String? = null,
@@ -29,7 +30,8 @@ internal data class SaveUserSettings(
     val discussion_languages: List<LanguageId>? = null,
     val open_links_in_new_tab: Boolean? = null,
     val infinite_scroll_enabled: Boolean? = null,
-    val post_listing_mode: PostListingMode? /* "List" | "Card" | "SmallCard" */ = null,
+    // "List" | "Card" | "SmallCard"
+    val post_listing_mode: PostListingMode? = null,
     val enable_keyboard_navigation: Boolean? = null,
     val enable_animated_images: Boolean? = null,
     val collapse_bot_comments: Boolean? = null,

@@ -13,7 +13,8 @@ internal data class PostReportView(
     val creator_banned_from_community: Boolean,
     val creator_is_moderator: Boolean,
     val creator_is_admin: Boolean,
-    val subscribed: SubscribedType /* "Subscribed" | "NotSubscribed" | "Pending" */,
+    // "Subscribed" | "NotSubscribed" | "Pending"
+    val subscribed: SubscribedType,
     val saved: Boolean,
     val read: Boolean,
     val hidden: Boolean,

@@ -135,6 +135,7 @@ class LemmyTextHelper @Inject constructor(
         SpannableStringBuilder(text)
     }
 
+    @Suppress("ktlint:standard:backing-property-naming")
     private fun bindLemmyText(
         textView: TextView,
         text: String,

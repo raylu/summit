@@ -13,7 +13,8 @@ internal data class PostView(
     val creator_is_moderator: Boolean,
     val creator_is_admin: Boolean,
     val counts: PostAggregates,
-    val subscribed: SubscribedType /* "Subscribed" | "NotSubscribed" | "Pending" */,
+    // "Subscribed" | "NotSubscribed" | "Pending"
+    val subscribed: SubscribedType,
     val saved: Boolean,
     val read: Boolean,
     val hidden: Boolean,

@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class CommunityView(
     val community: Community,
-    val subscribed: SubscribedType /* "Subscribed" | "NotSubscribed" | "Pending" */,
+    // "Subscribed" | "NotSubscribed" | "Pending"
+    val subscribed: SubscribedType,
     val blocked: Boolean,
     val counts: CommunityAggregates,
     val banned_from_community: Boolean,

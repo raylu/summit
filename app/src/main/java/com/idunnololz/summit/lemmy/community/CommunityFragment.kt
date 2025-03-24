@@ -233,7 +233,7 @@ class CommunityFragment :
         }
     }
 
-    private val _layoutSelectorMenu: BottomMenu by lazy {
+    private val layoutSelectorMenu: BottomMenu by lazy {
         makeLayoutSelectorMenu {
             preferences.setPostsLayout(it)
             onSelectedLayoutChanged()
@@ -1247,26 +1247,26 @@ class CommunityFragment :
     private fun getLayoutMenu(): BottomMenu {
         when (preferences.getPostsLayout()) {
             CommunityLayout.Compact ->
-                _layoutSelectorMenu.setChecked(R.id.layout_compact)
+                layoutSelectorMenu.setChecked(R.id.layout_compact)
             CommunityLayout.List ->
-                _layoutSelectorMenu.setChecked(R.id.layout_list)
+                layoutSelectorMenu.setChecked(R.id.layout_list)
             CommunityLayout.LargeList ->
-                _layoutSelectorMenu.setChecked(R.id.layout_large_list)
+                layoutSelectorMenu.setChecked(R.id.layout_large_list)
             CommunityLayout.Card ->
-                _layoutSelectorMenu.setChecked(R.id.layout_card)
+                layoutSelectorMenu.setChecked(R.id.layout_card)
             CommunityLayout.Card2 ->
-                _layoutSelectorMenu.setChecked(R.id.layout_card2)
+                layoutSelectorMenu.setChecked(R.id.layout_card2)
             CommunityLayout.Card3 ->
-                _layoutSelectorMenu.setChecked(R.id.layout_card3)
+                layoutSelectorMenu.setChecked(R.id.layout_card3)
             CommunityLayout.Full ->
-                _layoutSelectorMenu.setChecked(R.id.layout_full)
+                layoutSelectorMenu.setChecked(R.id.layout_full)
             CommunityLayout.ListWithCards ->
-                _layoutSelectorMenu.setChecked(R.id.layout_list_with_card)
+                layoutSelectorMenu.setChecked(R.id.layout_list_with_card)
             CommunityLayout.FullWithCards ->
-                _layoutSelectorMenu.setChecked(R.id.layout_full_with_card)
+                layoutSelectorMenu.setChecked(R.id.layout_full_with_card)
         }
 
-        return _layoutSelectorMenu
+        return layoutSelectorMenu
     }
 
     private fun showOverflowMenu() {
@@ -1619,7 +1619,9 @@ class CommunityFragment :
             R.id.hide_read -> {
                 val anchors = mutableSetOf<Int>()
                 val range = (binding.recyclerView.layoutManager as? LinearLayoutManager)?.let {
-                    it.findFirstCompletelyVisibleItemPosition()..(adapter?.items?.size ?: it.findLastVisibleItemPosition())
+                    val first = it.findFirstCompletelyVisibleItemPosition()
+                    val last = (adapter?.items?.size ?: it.findLastVisibleItemPosition())
+                    first..last
                 }
                 range?.mapNotNullTo(anchors) {
                     (adapter?.items?.getOrNull(it) as? PostListEngineItem.VisiblePostItem)

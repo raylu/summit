@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 internal data class FeaturePost(
     val post_id: PostId,
     val featured: Boolean,
-    val feature_type: PostFeatureType /* "Local" | "Community" */,
+    // "Local" | "Community"
+    val feature_type: PostFeatureType,
 )

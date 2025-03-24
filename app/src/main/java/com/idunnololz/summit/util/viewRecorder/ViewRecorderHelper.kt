@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package com.idunnololz.summit.util.viewRecorder
 
 import android.content.Context

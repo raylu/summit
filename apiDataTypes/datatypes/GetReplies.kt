@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class GetReplies(
-    val sort: CommentSortType? /* "Hot" | "Top" | "New" | "Old" | "Controversial" */ = null,
+    // "Hot" | "Top" | "New" | "Old" | "Controversial"
+    val sort: CommentSortType? = null,
     val page: Long? = null,
     val limit: Long? = null,
     val unread_only: Boolean? = null,

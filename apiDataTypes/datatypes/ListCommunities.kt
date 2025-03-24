@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class ListCommunities(
-    val type_: ListingType? /* "All" | "Local" | "Subscribed" | "ModeratorView" */ = null,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val type_: ListingType? = null,
     // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
     val sort: SortType? = null,
     val show_nsfw: Boolean? = null,

@@ -10,7 +10,7 @@ fun BaseFragment<*>.showSortTypeMenu(
     getCurrentSortType: () -> CommunitySortOrder,
     onSortOrderSelected: (CommunitySortOrder) -> Unit,
 ) {
-    val _sortByTopMenu: BottomMenu by lazy {
+    val sortByTopMenu: BottomMenu by lazy {
         BottomMenu(requireContext()).apply {
             addItem(R.id.sort_order_top_last_hour, R.string.time_frame_last_hour)
             addItem(
@@ -52,36 +52,36 @@ fun BaseFragment<*>.showSortTypeMenu(
             is CommunitySortOrder.TopOrder -> {
                 when (order.timeFrame) {
                     CommunitySortOrder.TimeFrame.Today ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_day)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_day)
                     CommunitySortOrder.TimeFrame.ThisWeek ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_week)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_week)
                     CommunitySortOrder.TimeFrame.ThisMonth ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_month)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_month)
                     CommunitySortOrder.TimeFrame.ThisYear ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_year)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_year)
                     CommunitySortOrder.TimeFrame.AllTime ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_all_time)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_all_time)
                     CommunitySortOrder.TimeFrame.LastHour ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_hour)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_hour)
                     CommunitySortOrder.TimeFrame.LastSixHour ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_six_hour)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_six_hour)
                     CommunitySortOrder.TimeFrame.LastTwelveHour ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_twelve_hour)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_twelve_hour)
                     CommunitySortOrder.TimeFrame.LastThreeMonth ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_three_month)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_three_month)
                     CommunitySortOrder.TimeFrame.LastSixMonth ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_six_month)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_six_month)
                     CommunitySortOrder.TimeFrame.LastNineMonth ->
-                        _sortByTopMenu.setChecked(R.id.sort_order_top_last_nine_month)
+                        sortByTopMenu.setChecked(R.id.sort_order_top_last_nine_month)
                 }
             }
             else -> {}
         }
 
-        return _sortByTopMenu
+        return sortByTopMenu
     }
 
-    val _sortByMenu: BottomMenu by lazy {
+    val sortByMenu: BottomMenu by lazy {
         BottomMenu(requireContext()).apply {
             addItem(R.id.sort_order_active, R.string.sort_order_active)
             addItem(R.id.sort_order_hot, R.string.sort_order_hot)
@@ -113,20 +113,20 @@ fun BaseFragment<*>.showSortTypeMenu(
 
     fun getSortByMenu(): BottomMenu {
         when (getCurrentSortType()) {
-            CommunitySortOrder.Active -> _sortByMenu.setChecked(R.id.sort_order_active)
-            CommunitySortOrder.Hot -> _sortByMenu.setChecked(R.id.sort_order_hot)
-            CommunitySortOrder.New -> _sortByMenu.setChecked(R.id.sort_order_new)
-            is CommunitySortOrder.TopOrder -> _sortByMenu.setChecked(R.id.sort_order_top)
-            CommunitySortOrder.MostComments -> _sortByMenu.setChecked(R.id.sort_order_most_comments)
-            CommunitySortOrder.NewComments -> _sortByMenu.setChecked(R.id.sort_order_new_comments)
-            CommunitySortOrder.Old -> _sortByMenu.setChecked(R.id.sort_order_old)
-            CommunitySortOrder.Controversial -> _sortByMenu.setChecked(
+            CommunitySortOrder.Active -> sortByMenu.setChecked(R.id.sort_order_active)
+            CommunitySortOrder.Hot -> sortByMenu.setChecked(R.id.sort_order_hot)
+            CommunitySortOrder.New -> sortByMenu.setChecked(R.id.sort_order_new)
+            is CommunitySortOrder.TopOrder -> sortByMenu.setChecked(R.id.sort_order_top)
+            CommunitySortOrder.MostComments -> sortByMenu.setChecked(R.id.sort_order_most_comments)
+            CommunitySortOrder.NewComments -> sortByMenu.setChecked(R.id.sort_order_new_comments)
+            CommunitySortOrder.Old -> sortByMenu.setChecked(R.id.sort_order_old)
+            CommunitySortOrder.Controversial -> sortByMenu.setChecked(
                 R.id.sort_order_controversial,
             )
-            CommunitySortOrder.Scaled -> _sortByMenu.setChecked(R.id.sort_order_scaled)
+            CommunitySortOrder.Scaled -> sortByMenu.setChecked(R.id.sort_order_scaled)
         }
 
-        return _sortByMenu
+        return sortByMenu
     }
 
     getMainActivity()?.showBottomMenu(getSortByMenu())

@@ -14,7 +14,8 @@ internal data class LocalUser(
     val theme: String,
     // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
     val default_sort_type: SortType,
-    val default_listing_type: ListingType /* "All" | "Local" | "Subscribed" | "ModeratorView" */,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val default_listing_type: ListingType,
     val interface_language: String,
     val show_avatars: Boolean,
     val send_notifications_to_email: Boolean,
@@ -28,7 +29,8 @@ internal data class LocalUser(
     val auto_expand: Boolean,
     val infinite_scroll_enabled: Boolean,
     val admin: Boolean,
-    val post_listing_mode: PostListingMode /* "List" | "Card" | "SmallCard" */,
+    // "List" | "Card" | "SmallCard"
+    val post_listing_mode: PostListingMode,
     val totp_2fa_enabled: Boolean,
     val enable_keyboard_navigation: Boolean,
     val enable_animated_images: Boolean,

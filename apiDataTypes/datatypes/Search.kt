@@ -11,10 +11,12 @@ internal data class Search(
     val community_id: CommunityId? = null,
     val community_name: String? = null,
     val creator_id: PersonId? = null,
-    val type_: SearchType? /* "All" | "Comments" | "Posts" | "Communities" | "Users" | "Url" */ = null,
+    // "All" | "Comments" | "Posts" | "Communities" | "Users" | "Url"
+    val type_: SearchType? = null,
     // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
     val sort: SortType? = null,
-    val listing_type: ListingType? /* "All" | "Local" | "Subscribed" | "ModeratorView" */ = null,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val listing_type: ListingType? = null,
     val page: Long? = null,
     val limit: Long? = null,
 )

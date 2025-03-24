@@ -20,7 +20,8 @@ internal data class CreateSite(
     val application_question: String? = null,
     val private_instance: Boolean? = null,
     val default_theme: String? = null,
-    val default_post_listing_type: ListingType? /* "All" | "Local" | "Subscribed" | "ModeratorView" */ = null,
+    // "All" | "Local" | "Subscribed" | "ModeratorView"
+    val default_post_listing_type: ListingType? = null,
     // "Active" | "Hot" | "New" | "Old" | "TopDay" | "TopWeek" | "TopMonth" | "TopYear" | "TopAll" | "MostComments" | "NewComments" | "TopHour" | "TopSixHour" | "TopTwelveHour" | "TopThreeMonths" | "TopSixMonths" | "TopNineMonths" | "Controversial" | "Scaled"
     val default_sort_type: SortType? = null,
     val legal_information: String? = null,
@@ -48,7 +49,9 @@ internal data class CreateSite(
     val allowed_instances: List<String>? = null,
     val blocked_instances: List<String>? = null,
     val taglines: List<String>? = null,
-    val registration_mode: RegistrationMode? /* "Closed" | "RequireApplication" | "Open" */ = null,
+    // "Closed" | "RequireApplication" | "Open"
+    val registration_mode: RegistrationMode? = null,
     val content_warning: String? = null,
-    val default_post_listing_mode: PostListingMode? /* "List" | "Card" | "SmallCard" */ = null,
+    // "List" | "Card" | "SmallCard"
+    val default_post_listing_mode: PostListingMode? = null,
 )

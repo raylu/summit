@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package com.idunnololz.summit.util.coil3.video.internal
 
 import android.graphics.Bitmap

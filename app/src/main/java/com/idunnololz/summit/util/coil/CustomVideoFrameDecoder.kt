@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-empty-file")
+
 package com.idunnololz.summit.util.coil
 //
 // import android.graphics.Bitmap

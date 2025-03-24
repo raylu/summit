@@ -23,22 +23,22 @@ class UserTagsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             userTagsManager.onChangedFlow.collect {
-                _refresh(force = true)
+                refresh(force = true)
             }
         }
 
         viewModelScope.launch {
-            _refresh()
+            refresh()
         }
     }
 
     fun refresh(force: Boolean = false) {
         viewModelScope.launch {
-            _refresh(force)
+            refresh(force)
         }
     }
 
-    private suspend fun _refresh(force: Boolean = false) {
+    private suspend fun refresh(force: Boolean = false) {
         if (model.valueOrNull != null && !force) {
             return
         }
